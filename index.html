@@ -1,0 +1,2497 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LMC Coding Lab</title>
+<style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
+</head>
+<body>
+<style>
+/* Layout: two-panel board. Memory table fills the left; CPU registers, accumulator, variables and I/O fill the right; a plain-English explanation strip runs beneath. */
+:root {
+  --bg: #edf1f6;
+  --panel: #ffffff;
+  --panel-2: #f5f7fb;
+  --ink: #13233f;
+  --muted: #5e6c82;
+  --line: #d4dbe6;
+  --navy: #1c3b6e;
+  --teal: #0a7d74;
+  --teal-soft: #d4eeea;
+  --amber: #d48600;
+  --amber-soft: #fdf0d2;
+  --on-accent: #ffffff;
+  --strike: #c8372d;
+  --bar: #13284a;
+  --bar-ink: #f3f6fb;
+  --bar-btn: #21406f;
+  --bar-line: #34558a;
+  --scrim: rgba(12, 22, 40, 0.5);
+  --font-ui: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Mono", "Cascadia Code", Consolas, "SF Mono", Menlo, "DejaVu Sans Mono", monospace;
+  --s: 1;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b1322; --panel: #121d31; --panel-2: #17243c; --ink: #e8eef8; --muted: #9babc2;
+    --line: #26354f; --navy: #9dbcf5; --teal: #3cc6b8; --teal-soft: #113a38; --amber: #f5b53d;
+    --amber-soft: #3a2c0e; --on-accent: #0b1322; --strike: #ff6f61; --bar: #08101d; --bar-ink: #e8eef8;
+    --bar-btn: #18253d; --bar-line: #2c3e5e; --scrim: rgba(0, 0, 0, 0.62);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b1322; --panel: #121d31; --panel-2: #17243c; --ink: #e8eef8; --muted: #9babc2;
+  --line: #26354f; --navy: #9dbcf5; --teal: #3cc6b8; --teal-soft: #113a38; --amber: #f5b53d;
+  --amber-soft: #3a2c0e; --on-accent: #0b1322; --strike: #ff6f61; --bar: #08101d; --bar-ink: #e8eef8;
+  --bar-btn: #18253d; --bar-line: #2c3e5e; --scrim: rgba(0, 0, 0, 0.62);
+  color-scheme: dark;
+}
+
+/* ===== Visual themes (data-style on the root). Classic uses the tokens above. ===== */
+
+/* Chalkboard: green board, wooden frame, chalk colours. One look only. */
+:root[data-style="chalk"] {
+  --bg: #1e3a2d; --panel: #244434; --panel-2: #2a4c3b; --ink: #f2f1e9; --muted: #a8c0b1;
+  --line: #4b6d5b; --navy: #f7e8a0; --teal: #9fd6ee; --teal-soft: #2e5a53; --amber: #f6b3c6;
+  --amber-soft: #4a4b44; --on-accent: #1e3a2d; --strike: #ff9a8f; --bar: #5a3920; --bar-ink: #f6ead9;
+  --bar-btn: #6d4729; --bar-line: #8c6141; --scrim: rgba(0, 0, 0, 0.55);
+  --font-ui: "Segoe Print", "Bradley Hand", "Chalkboard SE", "Comic Sans MS", cursive;
+  color-scheme: dark;
+}
+:root[data-style="chalk"] body {
+  background-image:
+    radial-gradient(ellipse at 18% 28%, rgba(255, 255, 255, 0.05), transparent 55%),
+    radial-gradient(ellipse at 78% 72%, rgba(255, 255, 255, 0.04), transparent 50%);
+}
+:root[data-style="chalk"] .panel, :root[data-style="chalk"] .card, :root[data-style="chalk"] .reg { border-width: 2px; border-style: dashed; }
+:root[data-style="chalk"] .acc-card, :root[data-style="chalk"] .reg-pc { border-style: solid; }
+
+/* Blueprint: drafting paper (light) or classic blueprint (dark), on a grid. */
+:root[data-style="blueprint"] {
+  --bg: #e6effa; --panel: #f6faff; --panel-2: #e2edf9; --ink: #0d3b73; --muted: #5878a1;
+  --line: #b5cce8; --navy: #0d3b73; --teal: #1565c0; --teal-soft: #d4e5fa; --amber: #d84d00;
+  --amber-soft: #fde5d3; --on-accent: #ffffff; --strike: #d32f2f; --bar: #0d3b73; --bar-ink: #ffffff;
+  --bar-btn: #164d91; --bar-line: #3a6db0; --scrim: rgba(8, 30, 60, 0.5); --grid: rgba(21, 101, 192, 0.12);
+  --font-ui: "Arial Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+  color-scheme: light;
+}
+:root[data-style="blueprint"][data-theme="dark"] {
+  --bg: #0e3a70; --panel: #12457f; --panel-2: #164e8d; --ink: #eef5ff; --muted: #a7c3e6;
+  --line: #4274ad; --navy: #ffffff; --teal: #8fd4ff; --teal-soft: #1c5a9c; --amber: #ffd166;
+  --amber-soft: #2b5b8d; --on-accent: #0e3a70; --strike: #ff8a80; --bar: #092c57; --bar-ink: #eef5ff;
+  --bar-btn: #0f3c72; --bar-line: #3a6aa3; --scrim: rgba(0, 10, 25, 0.6); --grid: rgba(255, 255, 255, 0.09);
+  color-scheme: dark;
+}
+:root[data-style="blueprint"] body {
+  background-image: linear-gradient(var(--grid) 1px, transparent 1px), linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 1.6rem 1.6rem;
+}
+:root[data-style="blueprint"] .panel, :root[data-style="blueprint"] .card, :root[data-style="blueprint"] .reg { border-width: 1.5px; border-color: var(--teal); border-radius: 0.2rem; }
+
+/* Retro terminal: green phosphor on black, square corners. One look only. */
+:root[data-style="terminal"] {
+  --bg: #030703; --panel: #071007; --panel-2: #0b180b; --ink: #6dff8e; --muted: #34a552;
+  --line: #1c4a27; --navy: #a6ffb8; --teal: #6dff8e; --teal-soft: #0d2a14; --amber: #ffb000;
+  --amber-soft: #2a1f00; --on-accent: #030703; --strike: #ff5f5f; --bar: #000000; --bar-ink: #6dff8e;
+  --bar-btn: #061206; --bar-line: #1c4a27; --scrim: rgba(0, 0, 0, 0.7);
+  --font-ui: ui-monospace, "Cascadia Mono", Consolas, "SF Mono", Menlo, "DejaVu Sans Mono", monospace;
+  color-scheme: dark;
+}
+:root[data-style="terminal"] *, :root[data-style="terminal"] *::before { border-radius: 0 !important; }
+:root[data-style="terminal"] .reg-cur, :root[data-style="terminal"] .trail li.cur, :root[data-style="terminal"] .c-op,
+:root[data-style="terminal"] .brand-mark { text-shadow: 0 0 0.35em currentColor; }
+:root[data-style="terminal"] body::after {
+  content: ""; position: fixed; inset: 0; pointer-events: none; z-index: 50;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.18) 0, rgba(0, 0, 0, 0.18) 1px, transparent 1px, transparent 3px);
+}
+
+/* High contrast: for bright rooms and distant seats. */
+:root[data-style="contrast"] {
+  --bg: #ffffff; --panel: #ffffff; --panel-2: #f0f0f0; --ink: #000000; --muted: #2b2b2b;
+  --line: #000000; --navy: #000000; --teal: #0040a8; --teal-soft: #dce8ff; --amber: #b34000;
+  --amber-soft: #ffe27a; --on-accent: #ffffff; --strike: #c00000; --bar: #000000; --bar-ink: #ffffff;
+  --bar-btn: #000000; --bar-line: #ffffff; --scrim: rgba(0, 0, 0, 0.7);
+  color-scheme: light;
+}
+:root[data-style="contrast"][data-theme="dark"] {
+  --bg: #000000; --panel: #000000; --panel-2: #141414; --ink: #ffffff; --muted: #e6e6e6;
+  --line: #ffffff; --navy: #ffff00; --teal: #00e5ff; --teal-soft: #003940; --amber: #ffff00;
+  --amber-soft: #333300; --on-accent: #000000; --strike: #ff5c5c; --bar: #000000; --bar-ink: #ffffff;
+  --bar-btn: #000000; --bar-line: #ffffff; --scrim: rgba(0, 0, 0, 0.8);
+  color-scheme: dark;
+}
+:root[data-style="contrast"] body { font-weight: 600; }
+:root[data-style="contrast"] .panel, :root[data-style="contrast"] .card, :root[data-style="contrast"] .reg { border-width: 2px; }
+:root[data-style="contrast"] .pc-box { border-width: 0.22em; }
+
+/* Theme picker swatches */
+.style-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); gap: 0.5rem; }
+.style-choice { position: relative; cursor: pointer; }
+.style-choice input { position: absolute; opacity: 0; pointer-events: none; }
+.style-card { display: flex; flex-direction: column; gap: 0.35rem; padding: 0.45rem; border: 2px solid var(--line); border-radius: 0.55rem; height: 100%; }
+.style-choice input:checked + .style-card { border-color: var(--teal); box-shadow: 0 0 0 0.18rem var(--teal-soft); }
+.style-choice input:focus-visible + .style-card { outline: 3px solid var(--amber); outline-offset: 2px; }
+.swatch { height: 2.6rem; border-radius: 0.35rem; display: flex; align-items: center; justify-content: center; gap: 0.3em; font: 800 1rem/1 var(--font-mono); }
+.style-card b { font-size: 0.9rem; }
+.style-card small { color: var(--muted); font-size: 0.75rem; line-height: 1.3; }
+
+html { font-size: clamp(14px, 0.9vw + 0.45vh, 24px); height: 100%; }
+body { height: 100%; margin: 0; background: var(--bg); color: var(--ink); font-family: var(--font-ui); font-size: 1rem; overflow: hidden; }
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+
+.app { height: 100%; display: flex; flex-direction: column; }
+
+/* ---------- Top bar ---------- */
+.bar {
+  --btn-bg: var(--bar-btn); --btn-ink: var(--bar-ink); --btn-line: var(--bar-line);
+  flex: none; display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1.1rem;
+  padding-block: 0.45rem; padding-inline: max(1rem, 16px);
+  background: var(--bar); color: var(--bar-ink); font-size: 0.78rem;
+}
+.brand { display: flex; align-items: baseline; gap: 0.4em; font-size: 1.15rem; margin-right: auto; }
+.brand-mark { font-family: var(--font-mono); font-weight: 800; color: var(--amber); letter-spacing: 0.04em; }
+.brand-name { font-weight: 600; }
+.group { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; }
+
+.btn {
+  font: inherit; font-weight: 600; padding: 0.42em 0.85em; border-radius: 0.45em;
+  border: 1px solid var(--btn-line); background: var(--btn-bg); color: var(--btn-ink);
+  cursor: pointer; line-height: 1.2; white-space: nowrap;
+}
+.btn:hover:not(:disabled) { filter: brightness(1.12); }
+.btn:disabled { opacity: 0.4; cursor: default; }
+.btn:focus-visible, .seg input:focus-visible + span, select:focus-visible, textarea:focus-visible, input:focus-visible {
+  outline: 3px solid var(--amber); outline-offset: 2px;
+}
+.btn.primary { background: var(--teal); color: var(--on-accent); border-color: transparent; }
+.btn.wide { min-width: 5.2em; }
+.speed { display: flex; align-items: center; gap: 0.4em; }
+.speed input { width: 6em; accent-color: var(--amber); }
+.speed output { min-width: 2.4em; font-weight: 700; color: var(--amber); }
+.turbo .pc-box, .turbo .mrow, .turbo .card { transition: none; }
+
+.seg { display: flex; border: 1px solid var(--btn-line); border-radius: 0.45em; overflow: hidden; }
+.seg label { cursor: pointer; }
+.seg input { position: absolute; opacity: 0; pointer-events: none; }
+.seg span { display: block; padding: 0.42em 0.8em; font-weight: 600; }
+.seg input:checked + span { background: var(--amber); color: var(--on-accent); }
+
+/* ---------- Board ---------- */
+.board {
+  flex: 1; min-height: 0; display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.75fr); gap: 1rem;
+  padding-block: 1rem; padding-inline: max(1rem, 16px);
+}
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 0.8rem; }
+
+/* Memory */
+.memory { display: flex; flex-direction: column; min-height: 0; min-width: 0; padding: 0.7rem 0.8rem 0.5rem; }
+.memory-head { display: flex; align-items: baseline; gap: 0.6rem; flex-wrap: wrap; padding-bottom: 0.4rem; }
+.memory-head h2, .cpu h2 { margin: 0; font-size: 1.05rem; color: var(--navy); letter-spacing: 0.02em; }
+.memory-head .note { font-size: 0.75rem; color: var(--muted); }
+.code-toggle { margin-left: auto; display: flex; align-items: center; gap: 0.4em; font-size: 0.75rem; color: var(--muted); cursor: pointer; }
+.code-toggle input { width: 1.1em; height: 1.1em; accent-color: var(--teal); }
+.memory-head .warn { font-size: 0.75rem; color: var(--amber); font-weight: 700; }
+
+.mrow {
+  display: grid; grid-template-columns: 2.4ch 3ch var(--labw, 6ch) 3.5ch minmax(var(--argw, 6ch), 1fr) var(--codew, 3.8ch);
+  column-gap: 0.9ch; align-items: center; height: var(--rowh, 3rem); padding-inline: 0.4ch;
+  font-family: var(--font-mono); font-size: var(--memfont, 1.4rem); font-variant-numeric: tabular-nums;
+  border-bottom: 1px solid var(--line); position: relative; transition: background-color 0.25s;
+}
+.mrow > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mem-header { height: auto; border-bottom: 2px solid var(--line); padding-block: 0.1em 0.2em; align-items: end; }
+.mrow.mem-header > span.h-addr { grid-column: 1 / 3; text-align: right; }
+.mrow.mem-header > span { font-family: var(--font-ui); font-size: clamp(0.66rem, 0.4em, 0.95rem); line-height: 1.2; color: var(--muted); font-weight: 700; overflow: visible; text-overflow: clip; }
+.mem-body { flex: 1; min-height: 0; overflow: auto; position: relative; }
+.c-addr { color: var(--muted); text-align: right; }
+.c-label { color: var(--navy); font-weight: 700; }
+.c-op { color: var(--teal); font-weight: 800; }
+.c-code { text-align: right; color: var(--muted); }
+.mem-header .c-code { text-align: right; }
+.c-gut { color: var(--navy); font-weight: 800; font-size: 0.7em; }
+.mrow.is-data .c-op { color: var(--muted); font-weight: 600; }
+.mrow.first-data { border-top: 2px dashed var(--line); }
+.mem-gap {
+  display: flex; align-items: center; gap: 0.8em; height: calc(var(--rowh, 3rem) * 0.6);
+  padding-inline: 0.6ch; border-bottom: 1px solid var(--line);
+  font-size: calc(var(--memfont, 1.4rem) * 0.42); color: var(--muted); font-style: italic;
+}
+.mem-gap span { font-size: 2em; font-style: normal; line-height: 1; }
+.mrow.is-pc { background: var(--amber-soft); }
+.mrow.is-read { background: var(--teal-soft); }
+.mrow.is-written { background: var(--teal-soft); }
+.mrow.is-written .c-code { color: var(--teal); font-weight: 800; }
+.mrow.changed .c-code { color: var(--teal); font-weight: 700; }
+.mrow.is-exec .c-gut::before { content: "\25B8"; }
+
+.pc-box {
+  position: absolute; left: 0; right: 0; top: 0; z-index: 2; pointer-events: none;
+  font-size: var(--memfont, 1.4rem); border: 0.15em solid var(--amber); border-radius: 0.35em;
+  transition: transform 0.35s cubic-bezier(.3, .7, .3, 1), height 0.2s;
+}
+.pc-box.halted { border-color: var(--muted); border-style: dashed; }
+.pc-tag {
+  position: absolute; left: 0.12em; top: 50%; transform: translateY(-50%);
+  font-family: var(--font-ui); font-size: 0.42em; font-weight: 800; letter-spacing: 0.04em;
+  background: var(--amber); color: var(--on-accent); padding: 0.12em 0.32em; border-radius: 0.3em;
+}
+.pc-box.halted .pc-tag { background: var(--muted); }
+.edit-mode .mrow.editable { cursor: text; }
+.edit-mode .mrow.editable:hover { box-shadow: inset 0 0 0 2px var(--line); }
+.mem-edit {
+  position: absolute; inset: 0; z-index: 3; display: flex; align-items: center; gap: 0.6em; padding-inline: 0.4ch;
+  background: var(--panel); border: 0.12em solid var(--teal); border-radius: 0.3em;
+}
+.mem-edit.bad { border-color: var(--strike); }
+.mem-edit input {
+  flex: 1; min-width: 0; font: inherit; font-family: var(--font-mono); font-weight: 700; text-transform: uppercase;
+  border: 0; background: transparent; color: var(--ink); padding: 0;
+}
+.mem-edit input:focus-visible { outline: none; }
+.mem-edit-msg { flex: 0 1 auto; max-width: 50%; font-family: var(--font-ui); font-size: 0.36em; line-height: 1.25; color: var(--muted); text-align: right; }
+.mem-edit.bad .mem-edit-msg { color: var(--strike); font-weight: 700; }
+.row-add {
+  position: absolute; left: 0.2em; bottom: 0; transform: translateY(50%); z-index: 4;
+  width: 1.35em; height: 1.35em; padding: 0; border-radius: 50%; border: 0;
+  font: 800 0.55em/1 var(--font-ui); background: var(--teal); color: var(--on-accent);
+  cursor: pointer; opacity: 0; transition: opacity 0.15s;
+}
+.row-add.top { bottom: auto; top: 0.1em; transform: none; }
+.memory:not(.insert-mode) .row-add { display: none; }
+.mrow.editable:hover .row-add, .row-add:focus-visible { opacity: 1; }
+.mrow.is-new { background: var(--teal-soft); }
+.mrow.is-new .c-addr { color: var(--teal); font-weight: 800; }
+.bp-mode .mrow.editable .c-addr { cursor: pointer; border-radius: 99px; text-align: center; }
+.bp-mode .mrow.editable .c-addr:hover { box-shadow: inset 0 0 0 0.08em var(--strike); }
+.mrow.bp .c-addr { background: var(--strike); color: var(--on-accent); font-weight: 800; }
+.explain.at-break .stage-pill { background: var(--strike); }
+.mem-empty { padding: 2.5rem 1rem; text-align: center; color: var(--muted); font-size: 1rem; line-height: 1.6; }
+#blankOut { position: fixed; inset: 0; z-index: 300; background: #000000; cursor: none; }
+.mem-foot { padding-top: 0.45rem; font-size: 0.7rem; color: var(--muted); display: flex; gap: 1.2em; flex-wrap: wrap; }
+.mem-foot kbd { font-family: var(--font-mono); border: 1px solid var(--line); border-radius: 0.3em; padding: 0 0.35em; background: var(--panel-2); color: var(--ink); }
+
+/* CPU side */
+.cpu { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 0.9rem; min-height: 0; min-width: 0; }
+.regs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 0.7rem; }
+/* Simple view: PC, explanation, Executed across the top; CIR, MAR and MDR hidden */
+.cpu.simple { grid-template-rows: auto minmax(0, 1fr); }
+.cpu.simple .regs { grid-template-columns: minmax(0, 1fr) minmax(0, 3.2fr) minmax(0, 1fr); }
+.cpu.simple .regs .explain { border-radius: 0.7rem; align-content: center; min-height: calc(1.05rem * var(--s) * 1.4 * 3 + 1.3rem); }
+.reg { background: var(--panel); border: 1px solid var(--line); border-radius: 0.7rem; padding: 0.45rem 0.75rem 0.5rem; min-width: 0; display: flex; flex-direction: column; gap: 0.05rem; }
+.reg-name { display: flex; flex-direction: column; align-items: flex-start; gap: 0; min-width: 0; line-height: 1.15; }
+.reg-name b { font-size: calc(1.05rem * var(--s)); color: var(--navy); letter-spacing: 0.04em; }
+.reg-name span { font-size: 0.7rem; color: var(--muted); letter-spacing: 0.02em; overflow-wrap: anywhere; }
+.reg-val { display: flex; align-items: baseline; gap: 0.45em; font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.reg-cur { font-size: calc(2.3rem * var(--s)); font-weight: 800; line-height: 1.1; }
+.reg-pc { border-color: var(--amber); border-width: 2px; }
+.reg-pc .reg-name b { color: var(--amber); }
+.cir-op { color: var(--teal); }
+.reg.flash { animation: flash 0.9s ease-out; }
+@keyframes flash { from { background: var(--teal-soft); } to { background: var(--panel); } }
+
+.reg-count { background: var(--panel-2); border-style: dashed; }
+.reg-count .reg-name b { color: var(--muted); }
+.acc-card.is-overflow { border-color: var(--strike); box-shadow: 0 0 0 0.2rem var(--panel-2); }
+.acc-card.is-overflow .badge { background: var(--strike); }
+
+.work { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 0.95fr); gap: 0.9rem; min-height: 0; }
+.vars { display: grid; grid-template-columns: repeat(auto-fit, minmax(8.5rem, 1fr)); grid-auto-rows: minmax(0, 1fr); gap: 0.7rem; min-height: 0; min-width: 0; }
+.vars-empty { border: 2px dashed var(--line); border-radius: 0.7rem; display: grid; place-items: center; padding: 1rem; color: var(--muted); text-align: center; font-size: 0.85rem; }
+
+.card { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: 0.7rem; padding: 0.55rem 0.8rem; display: flex; flex-direction: column; gap: 0.35rem; min-height: 0; min-width: 0; transition: border-color 0.3s, box-shadow 0.3s; }
+.card-head { display: flex; align-items: baseline; gap: 0.5rem; flex-wrap: wrap; }
+.card-head h3 { margin: 0; font-size: calc(1.05rem * var(--s)); color: var(--navy); letter-spacing: 0.02em; }
+.card-head small { color: var(--muted); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.07em; }
+/* Status badge floats over the card's corner so it never moves the numbers */
+.badge {
+  position: absolute; top: 0; right: 0.7rem; z-index: 3; pointer-events: none; translate: 0 -55%;
+  font-style: normal; font-size: calc(0.72rem * var(--s)); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+  padding: 0.2em 0.6em; border-radius: 99px; background: var(--teal); color: var(--on-accent);
+  box-shadow: 0 0.15rem 0.5rem rgba(0, 0, 0, 0.18); opacity: 0;
+}
+.badge.pop { animation: badgePop 3.6s ease-out forwards; }
+.badge.stay { opacity: 1; }
+@keyframes badgePop {
+  0% { opacity: 0; transform: translateY(-0.3em) scale(0.9); }
+  6% { opacity: 1; transform: none; }
+  80% { opacity: 1; transform: none; }
+  100% { opacity: 0; transform: none; }
+}
+@keyframes badgeFade { 0% { opacity: 0; } 6% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+.card.is-read { border-color: var(--teal); border-style: dashed; }
+.card.is-written { border-color: var(--teal); box-shadow: 0 0 0 0.2rem var(--teal-soft); }
+.acc-card { --cur: calc(3.3rem * var(--s)); --old: calc(1.6rem * var(--s)); border-width: 2px; border-color: var(--navy); }
+.acc-card.is-written { box-shadow: 0 0 0 0.2rem var(--teal-soft); border-color: var(--teal); }
+.var-card { --cur: calc(2.4rem * var(--s)); --old: calc(1.25rem * var(--s)); }
+
+.trail-box { flex: 1; min-height: 0; overflow: auto; }
+.trail { list-style: none; margin: 0; padding: 0.1em 0.35em; display: flex; flex-direction: column; align-items: flex-start; }
+.trail-box.overflowing { -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 2.2em); mask-image: linear-gradient(to bottom, transparent 0, #000 2.2em); }
+.trail li.more { font-family: var(--font-ui); font-size: calc(0.72rem * var(--s)); color: var(--muted); font-style: italic; padding-bottom: 0.2em; }
+.trail li { font-family: var(--font-mono); font-variant-numeric: tabular-nums; line-height: 1.12; position: relative; }
+.trail li.old { font-size: var(--old); color: var(--muted); padding-inline: 0.1em; }
+.trail li.old::after {
+  content: ""; position: absolute; left: -0.12em; right: -0.12em; top: 52%; height: 0.11em; min-height: 2px;
+  background: var(--strike); border-radius: 1em; transform: rotate(-10deg); transform-origin: left center;
+}
+.trail li.struck-now::after { animation: strike 0.45s ease-out both; animation-delay: var(--strike-delay, 0s); }
+.eqn {
+  position: fixed; z-index: 41; pointer-events: none; display: flex; align-items: baseline; gap: 0.3em;
+  padding: 0.15em 0.5em; border-radius: 0.35em; background: var(--panel); border: 0.08em solid var(--teal);
+  box-shadow: 0 0.4rem 1.4rem rgba(0, 0, 0, 0.22); font-family: var(--font-mono); font-weight: 800;
+  line-height: 1.12; color: var(--ink); white-space: nowrap; font-variant-numeric: tabular-nums;
+  opacity: 0; transition: opacity 0.25s;
+}
+.eqn.on { opacity: 1; }
+.eqn.on.fade { opacity: 0; transition-duration: 0.5s; }
+.eqn .eq-a, .eqn .eq-b { visibility: hidden; }
+.eqn.show-ab .eq-a, .eqn.show-ab .eq-b { visibility: visible; }
+.eqn .eq-b { color: var(--teal); }
+.eqn .eq-op, .eqn .eq-eq { color: var(--muted); opacity: 0; transition: opacity 0.15s; }
+.eqn.show-op .eq-op, .eqn.show-op .eq-eq { opacity: 1; }
+.eqn .eq-r { color: var(--navy); opacity: 0; }
+.eqn.show-r .eq-r { opacity: 1; animation: resultPop 0.4s ease-out; }
+.eqn-over { border-color: var(--strike); }
+.eqn-over .eq-r { color: var(--strike); }
+@keyframes resultPop { 0% { transform: scale(0.4); } 70% { transform: scale(1.18); } 100% { transform: scale(1); } }
+.flyer {
+  position: fixed; z-index: 42; pointer-events: none; transform-origin: 0 0;
+  font-family: var(--font-mono); font-weight: 800; line-height: 1.12; color: var(--teal);
+  background: var(--teal-soft); border-radius: 0.2em; padding-inline: 0.1em; margin-left: -0.1em;
+  box-shadow: 0 0.3rem 1rem rgba(0, 0, 0, 0.2); font-variant-numeric: tabular-nums;
+}
+.trail li.cur { font-size: var(--cur); font-weight: 800; color: var(--ink); }
+.trail li.fresh { animation: write 0.4s ease-out both; }
+@keyframes strike { from { transform: rotate(-10deg) scaleX(0); } to { transform: rotate(-10deg) scaleX(1); } }
+@keyframes write { from { opacity: 0; transform: translateY(-0.2em); } to { opacity: 1; transform: none; } }
+
+.io-card { --cur: calc(2.2rem * var(--s)); }
+.io-section { display: flex; flex-direction: column; min-height: 0; gap: 0.2rem; }
+.io-section.out { flex: 2; }
+.io-section.in { flex: 1; border-bottom: 1px dashed var(--line); padding-bottom: 0.3rem; }
+.io-section h4 { margin: 0; font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.io-list li { font-size: calc(1.5rem * var(--s)); font-weight: 600; color: var(--ink); }
+.io-list li.cur { font-size: var(--cur); font-weight: 800; }
+.io-list li .ch { color: var(--teal); }
+.io-list li small { font-size: 0.45em; color: var(--muted); margin-left: 0.3em; }
+.io-list li.io-empty { color: var(--muted); font-size: 0.8rem; font-family: var(--font-ui); font-weight: 400; }
+
+.explain { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: auto auto; column-gap: 0.9rem; row-gap: 0.35rem; align-items: center; align-content: center; padding: 0.6rem 0.9rem; font-size: calc(1.05rem * var(--s)); min-height: 3.4em; }
+.explain .stage-pill { grid-column: 1; grid-row: 1; justify-self: start; align-self: end; }
+.explain .instr-chip { grid-column: 1; grid-row: 2; justify-self: start; align-self: start; }
+.explain.no-chip .stage-pill { grid-row: 1 / 3; align-self: center; }
+.stage-pill { font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72em; padding: 0.3em 0.65em; border-radius: 99px; background: var(--navy); color: var(--panel); white-space: nowrap; }
+.instr-chip { font-family: var(--font-mono); font-weight: 800; background: var(--teal-soft); color: var(--teal); padding: 0.15em 0.5em; border-radius: 0.35em; white-space: nowrap; }
+.explain p { margin: 0; grid-column: 2; grid-row: 1 / 3; line-height: 1.4; }
+.explain.error .stage-pill { background: var(--strike); }
+.explain.halted .stage-pill { background: var(--muted); }
+
+/* ---------- Dialogs ---------- */
+.overlay { position: fixed; inset: 0; background: var(--scrim); display: grid; place-items: center; padding: 1rem; z-index: 20; }
+.dialog {
+  --btn-bg: var(--panel-2); --btn-ink: var(--ink); --btn-line: var(--line);
+  background: var(--panel); color: var(--ink); border-radius: 0.9rem; border: 1px solid var(--line);
+  width: min(30rem, 100%); padding: 1.1rem 1.3rem; display: flex; flex-direction: column; gap: 0.7rem;
+  box-shadow: 0 1.2rem 3rem rgba(0, 0, 0, 0.25); max-height: 100%;
+}
+.dialog.wide { width: min(52rem, 100%); }
+.dialog h2 { margin: 0; color: var(--navy); font-size: 1.25rem; }
+.dialog p { margin: 0; line-height: 1.45; }
+.dialog-head { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
+.dialog-tools { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; font-size: 0.85rem; }
+.opt-group { border: 1px solid var(--line); border-radius: 0.6rem; padding: 0.7rem 0.9rem; margin: 0; display: flex; flex-direction: column; gap: 0.5rem; }
+.opt-group legend { font-weight: 700; color: var(--navy); padding-inline: 0.3em; }
+.opt-choice { display: flex; gap: 0.6em; align-items: flex-start; cursor: pointer; line-height: 1.35; }
+.opt-choice input { margin-top: 0.25em; accent-color: var(--teal); width: 1.05em; height: 1.05em; }
+.opt-choice small { display: block; color: var(--muted); font-size: 0.85em; }
+.opt-count { display: flex; align-items: center; gap: 0.7em; flex-wrap: wrap; }
+.opt-count input { accent-color: var(--teal); width: 10rem; }
+.opt-count output { font-family: var(--font-mono); font-weight: 800; font-size: 1.15rem; min-width: 2ch; }
+.opt-count.off { opacity: 0.45; }
+.dialog.ref { width: min(62rem, 100%); max-height: calc(100vh - 2rem); padding-block: 0.9rem; gap: 0.5rem; }
+.ref-wrap { overflow: auto; min-height: 0; flex: 1; }
+.ref-table { width: 100%; border-collapse: collapse; font-size: calc(1rem * var(--s)); }
+.ref-table th, .ref-table td { text-align: left; padding: 0.3em 0.7em; border-bottom: 1px solid var(--line); vertical-align: top; line-height: 1.4; }
+.ref-table thead th { font-size: 0.72em; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); border-bottom: 2px solid var(--line); }
+.ref-table .ref-group th { background: var(--panel-2); color: var(--navy); font-size: 0.78em; letter-spacing: 0.04em; padding-block: 0.25em; }
+.ref-op { font-family: var(--font-mono); font-weight: 800; font-size: 1.2em; color: var(--teal); white-space: nowrap; }
+.ref-code { font-family: var(--font-mono); color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ref-eg { white-space: nowrap; }
+.ref-eg code { font-family: var(--font-mono); background: var(--teal-soft); color: var(--ink); padding: 0.15em 0.45em; border-radius: 0.35em; }
+.ref-none { color: var(--line); }
+.dialog.sym { width: min(48rem, 100%); }
+.sym-table { width: 100%; border-collapse: collapse; font-size: calc(1rem * var(--s)); font-variant-numeric: tabular-nums; }
+.sym-table th, .sym-table td { text-align: left; padding: 0.35em 0.7em; border-bottom: 1px solid var(--line); vertical-align: baseline; }
+.sym-table thead th { font-size: 0.8em; color: var(--muted); border-bottom: 2px solid var(--line); }
+.sym-label { font-family: var(--font-mono); font-weight: 800; font-size: 1.5em; color: var(--navy); white-space: nowrap; }
+.sym-eq { color: var(--muted); font-size: 1.2em; padding-inline: 0.2em !important; }
+.sym-addr { font-family: var(--font-mono); font-weight: 800; font-size: 1.5em; color: var(--teal); white-space: nowrap; }
+.sym-what, .sym-used { font-family: var(--font-mono); color: var(--ink); }
+.sym-used { color: var(--muted); }
+.sym-kind { font-family: var(--font-ui); font-size: 0.75em; color: var(--muted); margin-left: 0.5em; }
+.sym-empty { padding: 1rem 0; color: var(--muted); }
+.file-name { display: flex; align-items: center; gap: 0.4em; }
+.file-name input { font: inherit; font-family: var(--font-mono); width: 9.5em; padding: 0.35em 0.5em; border-radius: 0.4em; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); }
+.save-status { font-size: 0.85rem; color: var(--teal); font-weight: 600; margin-right: auto; align-self: center; }
+.save-status.bad { color: var(--strike); }
+.dialog { max-height: calc(100vh - 2rem); }
+.dialog.options { width: min(60rem, 100%); }
+.opt-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.7rem; overflow: auto; min-height: 0; align-items: start; }
+.opt-wide { grid-column: 1 / -1; }
+@media (max-width: 760px) { .opt-grid { grid-template-columns: minmax(0, 1fr); } }
+.dialog-foot { display: flex; justify-content: flex-end; gap: 0.6rem; }
+.tip { font-size: 0.82rem; color: var(--muted); }
+select { font: inherit; padding: 0.35em 0.5em; border-radius: 0.4em; border: 1px solid var(--line); background: var(--panel-2); color: var(--ink); }
+.file { position: relative; overflow: hidden; }
+.file input { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+.code-head { position: relative; flex: none; height: 1.3rem; margin-bottom: -0.35rem; overflow: hidden; font-size: 0.75rem; font-weight: 700; color: var(--muted); }
+.code-head span { position: absolute; bottom: 0; white-space: nowrap; }
+.code-head .ch-addr { left: 0; text-align: right; box-sizing: border-box; padding-right: 0.6rem; }
+.code-wrap { flex: 1; min-height: 16rem; display: flex; border-radius: 0.5rem; border: 1px solid var(--line); background: var(--panel-2); overflow: hidden; }
+.code-wrap.drop { border-color: var(--teal); box-shadow: 0 0 0 0.2rem var(--teal-soft); }
+.code-wrap:focus-within { border-color: var(--teal); }
+.gutter {
+  margin: 0; padding: 0.7rem 0.6rem; min-width: 3.4em; text-align: right; overflow: hidden; user-select: none;
+  font-family: var(--font-mono); font-size: 1.05rem; line-height: 1.45; color: var(--muted);
+  background: var(--panel); border-right: 1px solid var(--line); font-variant-numeric: tabular-nums;
+}
+.gutter .bad { color: var(--strike); font-weight: 800; }
+textarea#source {
+  font-family: var(--font-mono); font-size: 1.05rem; line-height: 1.45; flex: 1; min-width: 0;
+  resize: none; padding: 0.7rem 0.8rem; border: 0; background: transparent; color: var(--ink); tab-size: 8; white-space: pre; overflow: auto;
+}
+textarea#source:focus-visible { outline: none; }
+.errors { border-left: 4px solid var(--strike); background: var(--panel-2); padding: 0.5rem 0.8rem; font-size: 0.85rem; color: var(--ink); max-height: 8rem; overflow: auto; }
+.errors ul { margin: 0; padding-left: 1.1rem; }
+#inputValue { font-family: var(--font-mono); font-size: 2.6rem; font-weight: 800; width: 100%; padding: 0.2em 0.4em; border-radius: 0.5rem; border: 2px solid var(--teal); background: var(--panel-2); color: var(--ink); }
+.input-error { color: var(--strike); font-weight: 600; font-size: 0.9rem; }
+
+/* ---------- Narrow screens ---------- */
+@media (max-width: 900px) {
+  body { overflow: auto; }
+  .app { height: auto; min-height: 100%; }
+  .board { grid-template-columns: minmax(0, 1fr); }
+  .mem-body { max-height: 70vh; }
+  .regs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cpu.simple .regs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cpu.simple .regs .explain { grid-column: 1 / -1; order: 3; }
+  .reg-count { grid-column: 1 / -1; }
+  .work { grid-template-columns: minmax(0, 1fr); }
+  .vars { grid-auto-rows: 11rem; }
+  .acc-card, .io-card { height: 13rem; }
+  .brand { margin-right: 0; width: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pc-box, .mrow, .card { transition: none; }
+  .trail li.fresh, .trail li.struck-now::after, .reg.flash { animation: none; }
+  .badge.pop { animation-name: badgeFade; }
+}
+</style>
+
+<div class="app">
+  <header class="bar">
+    <div class="brand"><span class="brand-mark">LMC</span><span class="brand-name">Coding Lab</span></div>
+    <div class="group">
+      <button class="btn" id="btnEdit" type="button">Program</button>
+      <button class="btn" id="btnOptions" type="button">Options</button>
+      <button class="btn" id="btnRef" type="button">Instructions</button>
+      <button class="btn" id="btnSym" type="button">Labels</button>
+    </div>
+    <div class="group">
+      <button class="btn" id="btnBack" type="button">Back</button>
+      <button class="btn primary wide" id="btnStep" type="button">Step</button>
+      <button class="btn wide" id="btnRun" type="button">Run</button>
+      <button class="btn" id="btnInstant" type="button" title="Run to the end straight away, stopping only for input">Instant</button>
+      <label class="speed" for="speed">Speed <input type="range" id="speed" min="1" max="6" value="3"><output id="speedOut" for="speed">3</output></label>
+      <button class="btn" id="btnReset" type="button">Reset</button>
+    </div>
+    <div class="group">
+      <button class="btn" id="btnSmaller" type="button" aria-label="Smaller text">A&minus;</button>
+      <button class="btn" id="btnBigger" type="button" aria-label="Bigger text">A+</button>
+      <button class="btn" id="btnFull" type="button">Full screen</button>
+      <button class="btn" id="btnTheme" type="button">Dark mode</button>
+    </div>
+  </header>
+
+  <main class="board">
+    <section class="panel memory" id="memoryPanel">
+      <div class="memory-head">
+        <h2>Memory</h2>
+        <span class="note" id="memNote"></span>
+        <label class="code-toggle" for="showCodes"><input type="checkbox" id="showCodes"> Show machine code</label>
+        <span class="warn" id="pcWarn" hidden></span>
+      </div>
+      <div class="mrow mem-header" aria-hidden="true">
+        <span class="h-addr">Address</span><span>Label</span><span>Opcode</span><span>Operand</span><span class="c-code" id="codeHead">Value</span>
+      </div>
+      <div class="mem-body" id="memBody">
+        <div class="pc-box" id="pcBox"><span class="pc-tag">PC</span></div>
+        <div id="memRows"></div>
+      </div>
+      <div class="mem-foot">
+        <span><kbd>&rarr;</kbd> step</span><span><kbd>&larr;</kbd> back</span><span><kbd>R</kbd> run / pause</span><span><kbd>I</kbd> instant</span><span><kbd>?</kbd> instructions</span><span><kbd>L</kbd> labels</span><span><kbd>B</kbd> blank screen</span><span id="editHint" hidden>click a line to edit it</span><span id="insertHint" hidden>+ to insert a line</span><span id="bpHint" hidden>click an address for a breakpoint</span>
+      </div>
+    </section>
+
+    <section class="cpu" id="cpu">
+      <div class="regs" id="regs">
+        <div class="reg reg-pc" id="reg-pc"><div class="reg-name"><b>PC</b><span>Program counter</span></div><div class="reg-val"><span class="reg-cur"></span></div></div>
+        <div class="reg" id="reg-cir"><div class="reg-name"><b>CIR</b><span>Current instruction</span></div><div class="reg-val"><span class="reg-cur"></span></div></div>
+        <div class="reg" id="reg-mar"><div class="reg-name"><b>MAR</b><span>Memory address</span></div><div class="reg-val"><span class="reg-cur"></span></div></div>
+        <div class="reg" id="reg-mdr"><div class="reg-name"><b>MDR</b><span>Memory data</span></div><div class="reg-val"><span class="reg-cur"></span></div></div>
+        <div class="reg reg-count" id="regCount"><div class="reg-name"><b>Executed</b><span>instructions</span></div><div class="reg-val"><span class="reg-cur" id="cycleNo">0</span></div></div>
+      </div>
+
+      <div class="work">
+        <article class="card acc-card" id="accCard">
+          <div class="card-head"><h3>ACC</h3><small>Accumulator</small><em class="badge" id="accBadge"></em></div>
+          <div class="trail-box"><ol class="trail" id="accTrail"></ol></div>
+        </article>
+        <div class="vars" id="vars"></div>
+        <article class="card io-card">
+          <div class="io-section in">
+            <h4>Input</h4>
+            <div class="trail-box"><ol class="trail io-list" id="inList"></ol></div>
+          </div>
+          <div class="io-section out">
+            <h4>Output</h4>
+            <div class="trail-box"><ol class="trail io-list" id="outList"></ol></div>
+          </div>
+        </article>
+      </div>
+
+      <div class="panel explain" id="explain">
+        <span class="stage-pill" id="stagePill">Ready</span>
+        <span class="instr-chip" id="instrChip" hidden></span>
+        <p id="explainText"></p>
+      </div>
+    </section>
+  </main>
+</div>
+
+<div class="overlay" id="editor" hidden>
+  <div class="dialog wide" role="dialog" aria-modal="true" aria-labelledby="editorTitle">
+    <div class="dialog-head">
+      <h2 id="editorTitle">Program</h2>
+      <div class="dialog-tools">
+        <label for="exampleSelect">Example</label>
+        <select id="exampleSelect"></select>
+        <button class="btn" id="btnNew" type="button">New program</button>
+        <button class="btn" id="btnFormat" type="button">Format code</button>
+        <label class="file-name" for="fileName">Name <input type="text" id="fileName" value="lmc-program" spellcheck="false" autocomplete="off"></label>
+        <button class="btn" id="btnSave" type="button">Save .txt</button>
+        <label class="btn file">Open .txt file<input type="file" id="fileInput" accept=".txt,.lmc,text/plain"></label>
+      </div>
+    </div>
+    <p class="tip">One instruction per line: an optional label, the mnemonic, then an address or label. The numbers on the left are the memory addresses each line will use; a red number means that line has a mistake. Comments start with //. New program empties memory and this box. Format code tidies everything into capitals and neat columns, which also happens when you assemble. You can drop a .txt file onto the box.</p>
+    <div class="code-head" id="codeHeadRow" aria-hidden="true">
+      <span class="ch-addr" id="chAddr">Address</span>
+      <span class="ch-col" data-col="label">Label</span>
+      <span class="ch-col" data-col="op">Opcode</span>
+      <span class="ch-col" data-col="arg">Operand</span>
+      <span class="ch-col" data-col="comment">Comment</span>
+    </div>
+    <div class="code-wrap" id="codeWrap">
+      <pre class="gutter" id="gutter" aria-hidden="true"></pre>
+      <textarea id="source" spellcheck="false" wrap="off" aria-label="LMC program"></textarea>
+    </div>
+    <div class="errors" id="errors" hidden></div>
+    <div class="dialog-foot">
+      <span class="save-status" id="saveStatus" aria-live="polite"></span>
+      <button class="btn" id="btnCancel" type="button">Cancel</button>
+      <button class="btn primary" id="btnLoad" type="button">Assemble into memory</button>
+    </div>
+  </div>
+</div>
+
+<div id="blankOut" hidden aria-hidden="true"></div>
+
+<div class="overlay" id="symBox" hidden>
+  <div class="dialog sym" role="dialog" aria-modal="true" aria-labelledby="symTitle">
+    <div class="dialog-head">
+      <h2 id="symTitle">Symbol table</h2>
+      <button class="btn" id="btnSymClose" type="button">Close</button>
+    </div>
+    <p class="tip">When the program is assembled, each label is replaced by the address it stands for. This is the table the assembler builds to do that.</p>
+    <div class="ref-wrap" id="symBody"></div>
+  </div>
+</div>
+
+<div class="overlay" id="refBox" hidden>
+  <div class="dialog ref" role="dialog" aria-modal="true" aria-labelledby="refTitle">
+    <div class="dialog-head">
+      <h2 id="refTitle">LMC instruction set</h2>
+      <button class="btn" id="btnRefClose" type="button">Close</button>
+    </div>
+    <div class="ref-wrap">
+      <table class="ref-table">
+        <thead><tr><th scope="col">Mnemonic</th><th scope="col">Code</th><th scope="col">What it does</th><th scope="col">Example</th></tr></thead>
+        <tbody>
+          <tr class="ref-group"><th colspan="4" scope="colgroup">Data movement</th></tr>
+          <tr><td class="ref-op">LDA</td><td class="ref-code">5xx</td><td>Load: copy the value stored at address xx into the accumulator.</td><td class="ref-eg"><code>LDA NUM</code></td></tr>
+          <tr><td class="ref-op">STA</td><td class="ref-code">3xx</td><td>Store: copy the accumulator&rsquo;s value into address xx. STO also works.</td><td class="ref-eg"><code>STA TOTAL</code></td></tr>
+          <tr class="ref-group"><th colspan="4" scope="colgroup">Arithmetic</th></tr>
+          <tr><td class="ref-op">ADD</td><td class="ref-code">1xx</td><td>Add the value stored at address xx to the accumulator.</td><td class="ref-eg"><code>ADD ONE</code></td></tr>
+          <tr><td class="ref-op">SUB</td><td class="ref-code">2xx</td><td>Subtract the value stored at address xx from the accumulator.</td><td class="ref-eg"><code>SUB ONE</code></td></tr>
+          <tr class="ref-group"><th colspan="4" scope="colgroup">Input and output</th></tr>
+          <tr><td class="ref-op">INP</td><td class="ref-code">901</td><td>Input: wait for a number to be typed in and put it in the accumulator.</td><td class="ref-eg"><code>INP</code></td></tr>
+          <tr><td class="ref-op">OUT</td><td class="ref-code">902</td><td>Output the value in the accumulator.</td><td class="ref-eg"><code>OUT</code></td></tr>
+          <tr><td class="ref-op">OTC</td><td class="ref-code">922</td><td>Output the accumulator as a character, for example 65 is output as A.</td><td class="ref-eg"><code>OTC</code></td></tr>
+          <tr class="ref-group"><th colspan="4" scope="colgroup">Branching</th></tr>
+          <tr><td class="ref-op">BRA</td><td class="ref-code">6xx</td><td>Branch always: jump to address xx.</td><td class="ref-eg"><code>BRA LOOP</code></td></tr>
+          <tr><td class="ref-op">BRZ</td><td class="ref-code">7xx</td><td>Branch if zero: jump to address xx if the accumulator is 0.</td><td class="ref-eg"><code>BRZ DONE</code></td></tr>
+          <tr><td class="ref-op">BRP</td><td class="ref-code">8xx</td><td>Branch if positive: jump to address xx if the accumulator is 0 or more.</td><td class="ref-eg"><code>BRP BIGGER</code></td></tr>
+          <tr class="ref-group"><th colspan="4" scope="colgroup">Stopping and data</th></tr>
+          <tr><td class="ref-op">HLT</td><td class="ref-code">000</td><td>Halt: stop the program. COB also works.</td><td class="ref-eg"><code>HLT</code></td></tr>
+          <tr><td class="ref-op">DAT</td><td class="ref-code"><span class="ref-none">&ndash;</span></td><td>Data: not an instruction. Reserves a memory location, with an optional starting value. Usually labelled and placed after HLT.</td><td class="ref-eg"><code>COUNT DAT 0</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="tip">In a code, xx is the two-digit address the instruction uses. Labels such as LOOP or TOTAL stand for an address, so the assembler works out xx for you.</p>
+  </div>
+</div>
+
+<div class="overlay" id="optionsBox" hidden>
+  <div class="dialog options" role="dialog" aria-modal="true" aria-labelledby="optionsTitle">
+    <h2 id="optionsTitle">Options</h2>
+    <div class="opt-grid">
+    <fieldset class="opt-group opt-wide">
+      <legend>Theme</legend>
+      <div class="style-row">
+        <label class="style-choice" for="styleClassic"><input type="radio" name="appStyle" id="styleClassic" value="classic">
+          <span class="style-card"><span class="swatch" style="background:#edf1f6;color:#0a7d74;box-shadow:inset 0 0 0 2px #d48600">LDA</span><b>Classic</b><small>Navy, teal and amber. Light or dark.</small></span></label>
+        <label class="style-choice" for="styleChalk"><input type="radio" name="appStyle" id="styleChalk" value="chalk">
+          <span class="style-card"><span class="swatch" style="background:#1e3a2d;color:#f2f1e9;font-family:'Segoe Print','Comic Sans MS',cursive">LDA</span><b>Chalkboard</b><small>Green board and chalk. One look.</small></span></label>
+        <label class="style-choice" for="styleBlueprint"><input type="radio" name="appStyle" id="styleBlueprint" value="blueprint">
+          <span class="style-card"><span class="swatch" style="background-color:#0e3a70;color:#ffffff;background-image:linear-gradient(rgba(255,255,255,.12) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.12) 1px,transparent 1px);background-size:10px 10px">LDA</span><b>Blueprint</b><small>Technical drawing on a grid. Light or dark.</small></span></label>
+        <label class="style-choice" for="styleTerminal"><input type="radio" name="appStyle" id="styleTerminal" value="terminal">
+          <span class="style-card"><span class="swatch" style="background:#030703;color:#6dff8e;text-shadow:0 0 6px #6dff8e;border-radius:0">LDA_</span><b>Retro terminal</b><small>Green phosphor screen. One look.</small></span></label>
+        <label class="style-choice" for="styleContrast"><input type="radio" name="appStyle" id="styleContrast" value="contrast">
+          <span class="style-card"><span class="swatch" style="background:#ffffff;color:#000000;box-shadow:inset 0 0 0 3px #000000">LDA</span><b>High contrast</b><small>Bold black and white for the back row. Light or dark.</small></span></label>
+      </div>
+    </fieldset>
+    <fieldset class="opt-group">
+      <legend>Past values in the accumulator and variables</legend>
+      <label class="opt-choice" for="trailRecent"><input type="radio" name="trailMode" id="trailRecent" value="recent">
+        <span>Show the last few values<small>Older values are hidden, with a note saying how many.</small></span></label>
+      <label class="opt-choice" for="trailScroll"><input type="radio" name="trailMode" id="trailScroll" value="scroll">
+        <span>Scrolling column<small>Every value is kept in one column that moves up as new values are written.</small></span></label>
+      <div class="opt-count" id="keepRow">
+        <label for="keepCount">Past values to show</label>
+        <input type="range" id="keepCount" min="1" max="12" value="5">
+        <output id="keepOut" for="keepCount">5</output>
+      </div>
+    </fieldset>
+    <fieldset class="opt-group">
+      <legend>Editing in the memory table</legend>
+      <label class="opt-choice" for="editEnabled"><input type="checkbox" id="editEnabled">
+        <span>Click a line to edit it<small>Change or delete an instruction straight from the memory table. The program reloads and resets when you save.</small></span></label>
+      <label class="opt-choice" for="insertEnabled"><input type="checkbox" id="insertEnabled">
+        <span>Show + buttons to insert lines<small>Hover over a line to add a new one below it (or above the first line).</small></span></label>
+    </fieldset>
+    <fieldset class="opt-group">
+      <legend>Breakpoints</legend>
+      <label class="opt-choice" for="bpEnabled"><input type="checkbox" id="bpEnabled">
+        <span>Allow breakpoints<small>Click an address in the memory table to set or clear a breakpoint. Run and Instant pause when the PC reaches one.</small></span></label>
+    </fieldset>
+    <fieldset class="opt-group">
+      <legend>Code editor</legend>
+      <label class="opt-choice" for="formatOnEnter"><input type="checkbox" id="formatOnEnter">
+        <span>Format as you type<small>Each time you press Enter, the code is put into capitals and lined up in columns.</small></span></label>
+    </fieldset>
+    <fieldset class="opt-group">
+      <legend>Animation</legend>
+      <label class="opt-choice" for="animateMoves"><input type="checkbox" id="animateMoves">
+        <span>Animate values moving<small>When a value is copied (STA, LDA, ADD, SUB, INP, OUT), a copy glides from where it comes from to where it goes. Used with Step and the slower Run speeds.</small></span></label>
+    </fieldset>
+    <fieldset class="opt-group">
+      <legend>Registers</legend>
+      <label class="opt-choice" for="showRegs"><input type="checkbox" id="showRegs">
+        <span>Show the CIR, MAR and MDR<small>Adds the three registers along the top and moves the explanation to the bottom of the screen.</small></span></label>
+    </fieldset>
+    </div>
+    <div class="dialog-foot"><button class="btn primary" id="btnOptionsDone" type="button">Done</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="inputBox" hidden>
+  <form class="dialog" id="inputForm" role="dialog" aria-modal="true" aria-labelledby="inputTitle">
+    <h2 id="inputTitle">Input</h2>
+    <p>The program has reached <b>INP</b>. Type a whole number from &minus;999 to 999.</p>
+    <input id="inputValue" type="number" inputmode="numeric" step="1" autocomplete="off">
+    <p class="input-error" id="inputError" hidden></p>
+    <div class="dialog-foot"><button class="btn primary" type="submit">Enter</button></div>
+  </form>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- Instruction set ---------- */
+  const OPCODES = {
+    ADD: 100, SUB: 200, STA: 300, STO: 300, LDA: 500,
+    BRA: 600, BRZ: 700, BRP: 800,
+    INP: 901, OUT: 902, OTC: 922,
+    HLT: 0, COB: 0, DAT: 0
+  };
+  const ADDRESS_OPS = ["ADD", "SUB", "STA", "STO", "LDA", "BRA", "BRZ", "BRP"];
+  const DATA_OPS = ["ADD", "SUB", "STA", "STO", "LDA"];
+  const NO_OPERAND_OPS = ["INP", "OUT", "OTC", "HLT", "COB"];
+  const SPEEDS = [2000, 1300, 800, 450, 200, 0];
+  const MAX_SPEED = 6;
+
+  const EXAMPLES = [
+    { name: "Add two numbers", code:
+      "        INP\n        STA FIRST\n        INP\n        ADD FIRST\n        OUT\n        HLT\nFIRST   DAT\n" },
+    { name: "Add two stored values", code:
+      "        LDA NUM1\n        ADD NUM2\n        STA TOTAL\n        OUT\n        HLT\nNUM1    DAT 12\nNUM2    DAT 30\nTOTAL   DAT 0\n" },
+    { name: "Countdown", code:
+      "        INP\nLOOP    OUT\n        SUB ONE\n        BRP LOOP\n        HLT\nONE     DAT 1\n" },
+    { name: "Larger of two numbers", code:
+      "        INP\n        STA A\n        INP\n        STA B\n        SUB A\n        BRP BBIG\n        LDA A\n        BRA SHOW\nBBIG    LDA B\nSHOW    OUT\n        HLT\nA       DAT\nB       DAT\n" },
+    { name: "Count up to a number", code:
+      "        INP\n        STA LIMIT\nLOOP    LDA COUNT\n        ADD ONE\n        STA COUNT\n        OUT\n        SUB LIMIT\n        BRZ DONE\n        BRA LOOP\nDONE    HLT\nCOUNT   DAT 0\nONE     DAT 1\nLIMIT   DAT\n" },
+    { name: "Overflow (endless loop)", code:
+      "        LDA START\nLOOP    OUT\n        ADD STEP\n        BRA LOOP\nSTART   DAT 100\nSTEP    DAT 150\n" },
+    { name: "Multiply (repeated addition)", code:
+      "        INP\n        STA X\n        INP\n        STA Y\nLOOP    LDA Y\n        BRZ DONE\n        SUB ONE\n        STA Y\n        LDA TOTAL\n        ADD X\n        STA TOTAL\n        BRA LOOP\nDONE    LDA TOTAL\n        OUT\n        HLT\nX       DAT\nY       DAT\nTOTAL   DAT 0\nONE     DAT 1\n" }
+  ];
+
+  /* ---------- State ---------- */
+  let program = null;
+  let source = "";
+  let cpu = null;
+  let history = [];
+  let instant = false;
+  let running = false;
+  let timer = null;
+  let rafId = null;
+  let scale = 1;
+  let rowEls = {};
+  let showCodes = false;
+  let trailMode = "recent";
+  let keepCount = 5;
+  let showRegs = false;
+  let animateMoves = false;
+  let formatOnEnter = true;
+  let bpEnabled = false;
+  let editEnabled = false;
+  let insertEnabled = false;
+  let breakpoints = {};
+  let varCards = {};
+  let shown = {};
+  let lastRegs = {};
+
+  function byId(id) { return document.getElementById(id); }
+
+  function store(key, value) {
+    try { window.localStorage.setItem("lmcWhiteboard." + key, value); } catch (e) { /* storage unavailable */ }
+  }
+  function recall(key) {
+    try { return window.localStorage.getItem("lmcWhiteboard." + key); } catch (e) { return null; }
+  }
+
+  /* ---------- Formatting ---------- */
+  function pad(n, width) {
+    let s = String(Math.abs(n));
+    while (s.length < width) { s = "0" + s; }
+    return s;
+  }
+  function pad2(n) { return pad(n, 2); }
+  function fmt(v) { return v < 0 ? "−" + Math.abs(v) : String(v); }
+  function fmtCode(v) { return v < 0 ? "−" + pad(v, 3) : pad(v, 3); }
+  function escapeHtml(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function labelAt(addr) {
+    return program && program.labelAt[addr] ? program.labelAt[addr] : "";
+  }
+  function where(addr) {
+    const label = labelAt(addr);
+    return label ? label + " (address " + pad2(addr) + ")" : "address " + pad2(addr);
+  }
+
+  function mnemonicFor(code) {
+    if (code === 901) { return "INP"; }
+    if (code === 902) { return "OUT"; }
+    if (code === 922) { return "OTC"; }
+    if (code < 0 || code > 999) { return null; }
+    const names = ["HLT", "ADD", "SUB", "STA", null, "LDA", "BRA", "BRZ", "BRP", null];
+    return names[Math.floor(code / 100)];
+  }
+  function instrText(code) {
+    const m = mnemonicFor(code);
+    if (!m) { return fmtCode(code); }
+    if (ADDRESS_OPS.indexOf(m) >= 0) {
+      const a = code % 100;
+      return m + " " + (labelAt(a) || pad2(a));
+    }
+    return m;
+  }
+
+  /* ---------- Assembler ---------- */
+  function isMnemonic(word) {
+    return Object.prototype.hasOwnProperty.call(OPCODES, String(word).toUpperCase());
+  }
+
+  function assemble(text) {
+    const raw = text.split(/\r?\n/);
+    const lines = [];
+    const errors = [];
+    const labels = {};
+    let i;
+    for (i = 0; i < raw.length; i++) {
+      let line = raw[i];
+      const cut = line.indexOf("//");
+      if (cut >= 0) { line = line.substring(0, cut); }
+      line = line.trim();
+      if (line === "") { continue; }
+      const parts = line.split(/\s+/);
+      const lineNo = i + 1;
+      let label = "";
+      let start = 0;
+      if (!isMnemonic(parts[0])) { label = parts[0]; start = 1; }
+      const op = (parts[start] || "").toUpperCase();
+      const operand = parts[start + 1] || "";
+      if (label !== "") {
+        if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(label)) {
+          errors.push("Line " + lineNo + ": ‘" + label + "’ is not an LMC instruction or a valid label.");
+          continue;
+        }
+        if (op === "") {
+          errors.push("Line " + lineNo + ": the label " + label + " needs an instruction after it.");
+          continue;
+        }
+        if (!isMnemonic(op)) {
+          errors.push("Line " + lineNo + ": ‘" + parts[start] + "’ is not an LMC instruction.");
+          continue;
+        }
+        if (Object.prototype.hasOwnProperty.call(labels, label.toUpperCase())) {
+          errors.push("Line " + lineNo + ": the label " + label + " is used more than once.");
+          continue;
+        }
+        labels[label.toUpperCase()] = lines.length;
+      }
+      if (parts.length > start + 2) {
+        errors.push("Line " + lineNo + ": too many parts. Use label, instruction, operand.");
+        continue;
+      }
+      lines.push({ lineNo: lineNo, addr: lines.length, label: label, op: op, operand: operand, code: 0 });
+    }
+
+    if (lines.length > 100) {
+      errors.push("The program needs " + lines.length + " memory locations, but the LMC only has 100.");
+    }
+
+    lines.forEach(function (ln) {
+      if (ln.op === "DAT") {
+        if (ln.operand === "") { ln.code = 0; return; }
+        if (!/^-?\d+$/.test(ln.operand)) {
+          errors.push("Line " + ln.lineNo + ": DAT needs a whole number, not ‘" + ln.operand + "’.");
+          return;
+        }
+        const v = parseInt(ln.operand, 10);
+        if (v < -999 || v > 999) {
+          errors.push("Line " + ln.lineNo + ": DAT values must be between −999 and 999.");
+          return;
+        }
+        ln.code = v;
+        return;
+      }
+      if (NO_OPERAND_OPS.indexOf(ln.op) >= 0) {
+        if (ln.operand !== "") {
+          errors.push("Line " + ln.lineNo + ": " + ln.op + " does not take an address.");
+          return;
+        }
+        ln.code = OPCODES[ln.op];
+        return;
+      }
+      if (ln.operand === "") {
+        errors.push("Line " + ln.lineNo + ": " + ln.op + " needs an address or a label.");
+        return;
+      }
+      let target;
+      if (/^\d+$/.test(ln.operand)) {
+        target = parseInt(ln.operand, 10);
+        if (target > 99) {
+          errors.push("Line " + ln.lineNo + ": addresses go from 00 to 99.");
+          return;
+        }
+      } else if (Object.prototype.hasOwnProperty.call(labels, ln.operand.toUpperCase())) {
+        target = labels[ln.operand.toUpperCase()];
+      } else {
+        errors.push("Line " + ln.lineNo + ": the label " + ln.operand + " has not been defined.");
+        return;
+      }
+      ln.code = OPCODES[ln.op] + target;
+    });
+
+    const labelAtMap = {};
+    lines.forEach(function (ln) { if (ln.label) { labelAtMap[ln.addr] = ln.label; } });
+
+    /* Addresses beyond the end of the program that the code reads or writes directly (for example STA 20) */
+    const extras = [];
+    lines.forEach(function (ln) {
+      if (DATA_OPS.indexOf(ln.op) < 0) { return; }
+      const target = ln.code % 100;
+      if (target >= lines.length && extras.indexOf(target) < 0) { extras.push(target); }
+    });
+    extras.sort(function (a, b) { return a - b; });
+
+    const errorLines = {};
+    errors.forEach(function (msg) {
+      const m = /^Line (\d+):/.exec(msg);
+      if (m) { errorLines[m[1]] = msg; }
+    });
+
+    return { lines: lines, labelAt: labelAtMap, extras: extras, errors: errors, errorLines: errorLines };
+  }
+
+  /* ---------- Machine ---------- */
+  function freshCpu() {
+    const mem = [];
+    const trails = {};
+    let a;
+    for (a = 0; a < 100; a++) { mem.push(0); }
+    program.lines.forEach(function (ln) {
+      mem[ln.addr] = ln.code;
+      if (ln.op === "DAT") { trails[ln.addr] = [ln.code]; }
+    });
+    program.extras.forEach(function (addr) { trails[addr] = [0]; });
+    return {
+      mem: mem, pc: 0, acc: 0, mar: 0, mdr: 0, cir: 0,
+      prev: { pc: null, mar: null, mdr: null, cir: null },
+      accTrail: [0], varTrails: trails, inputs: [], outputs: [],
+      stage: 0, halted: false, waiting: false, error: false, cycle: 0,
+      read: null, written: null, accWritten: false, execAddr: null,
+      stageName: program.lines.length === 0 ? "Empty" : "Ready", instr: "",
+      text: program.lines.length === 0 ?
+        "Memory is empty. Press Program to type a program in or open one from a file." :
+        "Press Step or the \u2192 key to begin. The orange PC box shows the next instruction to be fetched."
+    };
+  }
+
+  function setReg(name, value) {
+    if (cpu[name] !== value) {
+      cpu.prev[name] = cpu[name];
+      cpu[name] = value;
+    }
+  }
+  /* Every write adds to the trail, even when the value is the same, so the old copy is crossed out */
+  function setAcc(value) {
+    cpu.accWritten = true;
+    cpu.acc = value;
+    cpu.accTrail.push(value);
+  }
+  function writeMem(addr, value) {
+    cpu.written = addr;
+    cpu.mem[addr] = value;
+    if (cpu.varTrails[addr]) { cpu.varTrails[addr].push(value); }
+  }
+  function overflow(sum) {
+    if (sum >= -999 && sum <= 999) { return false; }
+    cpu.halted = true;
+    cpu.error = true;
+    cpu.errorLabel = "Overflow";
+    cpu.overflow = true;
+    cpu.text += " The answer " + fmt(sum) + " will not fit in the accumulator, which can only hold \u2212999 to 999. The program stops with an overflow error.";
+    return true;
+  }
+
+  function doStage() {
+    if (cpu.stage === 0) {
+      cpu.read = null;
+      cpu.written = null;
+      cpu.accWritten = false;
+      cpu.move = null;
+      setReg("mar", cpu.pc);
+      cpu.stageName = "Fetch";
+      cpu.instr = "";
+      cpu.text = "The address in the PC (" + pad2(cpu.pc) + ") is copied into the MAR.";
+      cpu.stage = 1;
+    } else if (cpu.stage === 1) {
+      cpu.execAddr = cpu.mar;
+      setReg("mdr", cpu.mem[cpu.mar]);
+      setReg("pc", (cpu.pc + 1) % 100);
+      cpu.text = "The contents of address " + pad2(cpu.mar) + " (" + fmtCode(cpu.mdr) + ") are copied into the MDR, and the PC is incremented to " + pad2(cpu.pc) + ".";
+      cpu.stage = 2;
+    } else if (cpu.stage === 2) {
+      setReg("cir", cpu.mdr);
+      cpu.text = "The instruction in the MDR is copied into the CIR, ready to be decoded.";
+      cpu.stage = 3;
+    } else if (cpu.stage === 3) {
+      const m = mnemonicFor(cpu.cir);
+      cpu.stageName = "Decode";
+      cpu.instr = instrText(cpu.cir);
+      if (!m) {
+        cpu.text = "The CIR holds " + fmtCode(cpu.cir) + ", which is not a valid instruction.";
+      } else if (ADDRESS_OPS.indexOf(m) >= 0) {
+        cpu.text = "The CIR holds " + fmtCode(cpu.cir) + ". Opcode " + Math.floor(cpu.cir / 100) + " means " + m + ", and the operand " + pad2(cpu.cir % 100) + " is " + where(cpu.cir % 100) + ".";
+      } else {
+        cpu.text = "The CIR holds " + fmtCode(cpu.cir) + ", which means " + m + ". There is no address to use.";
+      }
+      cpu.stage = 4;
+    } else {
+      execute();
+      if (!cpu.waiting) { cpu.stage = 0; }
+      if (!cpu.waiting && !cpu.error) { cpu.cycle += 1; }
+    }
+  }
+
+  function execute() {
+    const code = cpu.cir;
+    const m = mnemonicFor(code);
+    const addr = ((code % 100) + 100) % 100;
+    let old;
+    cpu.stageName = "Execute";
+    cpu.instr = instrText(code);
+    if (!m) {
+      cpu.halted = true;
+      cpu.error = true;
+      cpu.text = "The CIR holds " + fmtCode(code) + ", which is not a valid instruction, so the program stops.";
+      return;
+    }
+    switch (m) {
+      case "ADD":
+        setReg("mar", addr);
+        setReg("mdr", cpu.mem[addr]);
+        cpu.read = addr;
+        old = cpu.acc;
+        cpu.move = { from: addr, to: "acc", kind: "+" };
+        cpu.text = "The value " + fmt(cpu.mdr) + " from " + where(addr) + " is added to the accumulator: " + fmt(old) + " + " + fmt(cpu.mdr) + " = " + fmt(old + cpu.mdr) + ".";
+        if (!overflow(old + cpu.mdr)) { setAcc(old + cpu.mdr); }
+        break;
+      case "SUB":
+        setReg("mar", addr);
+        setReg("mdr", cpu.mem[addr]);
+        cpu.read = addr;
+        old = cpu.acc;
+        cpu.move = { from: addr, to: "acc", kind: "\u2212" };
+        cpu.text = "The value " + fmt(cpu.mdr) + " from " + where(addr) + " is subtracted from the accumulator: " + fmt(old) + " \u2212 " + fmt(cpu.mdr) + " = " + fmt(old - cpu.mdr) + ".";
+        if (!overflow(old - cpu.mdr)) { setAcc(old - cpu.mdr); }
+        break;
+      case "STA":
+        setReg("mar", addr);
+        setReg("mdr", cpu.acc);
+        writeMem(addr, cpu.acc);
+        cpu.move = { from: "acc", to: addr };
+        cpu.text = "The accumulator’s value " + fmt(cpu.acc) + " is stored in " + where(addr) + ".";
+        break;
+      case "LDA":
+        setReg("mar", addr);
+        setReg("mdr", cpu.mem[addr]);
+        cpu.read = addr;
+        setAcc(cpu.mdr);
+        cpu.move = { from: addr, to: "acc" };
+        cpu.text = "The value " + fmt(cpu.mdr) + " is loaded from " + where(addr) + " into the accumulator.";
+        break;
+      case "BRA":
+        setReg("pc", addr);
+        cpu.text = "Branch always: the PC is set to " + where(addr) + ", so that instruction is fetched next.";
+        break;
+      case "BRZ":
+        if (cpu.acc === 0) {
+          setReg("pc", addr);
+          cpu.text = "The accumulator is 0, so the branch is taken. The PC is set to " + where(addr) + ".";
+        } else {
+          cpu.text = "The accumulator is " + fmt(cpu.acc) + ", not 0, so the branch is not taken. The PC stays at " + pad2(cpu.pc) + ".";
+        }
+        break;
+      case "BRP":
+        if (cpu.acc >= 0) {
+          setReg("pc", addr);
+          cpu.text = "The accumulator is " + fmt(cpu.acc) + ", which is zero or positive, so the branch is taken. The PC is set to " + where(addr) + ".";
+        } else {
+          cpu.text = "The accumulator is " + fmt(cpu.acc) + ", which is negative, so the branch is not taken. The PC stays at " + pad2(cpu.pc) + ".";
+        }
+        break;
+      case "INP":
+        cpu.waiting = true;
+        cpu.text = "The program is waiting for a value to be input.";
+        break;
+      case "OUT":
+        cpu.outputs.push({ v: cpu.acc, ch: null });
+        cpu.move = { from: "acc", to: "output" };
+        cpu.text = "The accumulator’s value " + fmt(cpu.acc) + " is output.";
+        break;
+      case "OTC":
+        cpu.outputs.push({ v: cpu.acc, ch: String.fromCharCode(cpu.acc) });
+        cpu.move = { from: "acc", to: "output" };
+        cpu.text = "The accumulator holds " + fmt(cpu.acc) + ", which is output as the character ‘" + String.fromCharCode(cpu.acc) + "’.";
+        break;
+      default:
+        cpu.halted = true;
+        cpu.stageName = "Halted";
+        cpu.text = "HLT: the program has finished. Press Reset to run it again.";
+    }
+  }
+
+  function runOneInstruction() {
+    do { doStage(); } while (cpu.stage !== 0 && !cpu.waiting && !cpu.halted);
+  }
+
+  function snapshot() { return JSON.parse(JSON.stringify(cpu)); }
+
+  function step(quick) {
+    if (!cpu || cpu.halted || cpu.waiting || program.lines.length === 0) { return; }
+    history.push(snapshot());
+    if (history.length > 2000) { history.shift(); }
+    runOneInstruction();
+    render(quick !== true);
+    if (quick !== true) { animateMove(running ? delay() : 0); }
+  }
+
+  function back() {
+    if (history.length === 0) { return; }
+    stopRun();
+    cpu = history.pop();
+    shown = {};
+    lastRegs = {};
+    render(false);
+  }
+
+  function provideInput(v) {
+    setAcc(v);
+    cpu.inputs.push(v);
+    cpu.cycle += 1;
+    cpu.waiting = false;
+    cpu.stage = 0;
+    cpu.text = "The value " + fmt(v) + " is input and placed in the accumulator.";
+    cpu.move = { from: "input", to: "acc" };
+    if ((running || instant) && hitBreakpoint()) {
+      stopRun();
+      render(true);
+      animateMove(0);
+      return;
+    }
+    render(true);
+    if (!instant) { animateMove(running ? delay() : 0); }
+    if (running) { timer = window.setTimeout(tick, delay()); }
+    if (instant) { window.setTimeout(runInstant, 0); }
+  }
+
+  /* ---------- Symbol table ---------- */
+  function renderSymbolTable() {
+    const box = byId("symBody");
+    const labelled = program.lines.filter(function (ln) { return ln.label !== ""; });
+    if (labelled.length === 0) {
+      box.innerHTML = '<p class="sym-empty">This program has no labels, so the symbol table is empty. Every address is written as a number.</p>';
+      return;
+    }
+    let html = '<table class="sym-table"><thead><tr><th scope="col">Label</th><th></th><th scope="col">Address</th>' +
+      '<th scope="col">What is there</th><th scope="col">Used by</th></tr></thead><tbody>';
+    labelled.forEach(function (ln) {
+      const users = program.lines.filter(function (other) {
+        return other.op !== "DAT" && other.operand.toUpperCase() === ln.label.toUpperCase();
+      }).map(function (other) { return pad2(other.addr) + " " + other.op; });
+      const what = ln.op + (ln.operand ? " " + ln.operand : "");
+      const kind = ln.op === "DAT" ? "data" : "instruction";
+      html += "<tr><td class=\"sym-label\">" + escapeHtml(ln.label) + '</td><td class="sym-eq">=</td>' +
+        '<td class="sym-addr">' + pad2(ln.addr) + "</td>" +
+        '<td class="sym-what">' + escapeHtml(what) + '<span class="sym-kind">' + kind + "</span></td>" +
+        '<td class="sym-used">' + (users.length ? escapeHtml(users.join(", ")) : "not used") + "</td></tr>";
+    });
+    box.innerHTML = html + "</tbody></table>";
+  }
+  function openSymbolTable() {
+    stopRun();
+    renderSymbolTable();
+    byId("symBox").hidden = false;
+    byId("btnSymClose").focus();
+  }
+
+  /* ---------- Breakpoints ---------- */
+  function toggleBreakpoint(addr) {
+    if (breakpoints[addr]) { delete breakpoints[addr]; }
+    else { breakpoints[addr] = true; }
+    renderMemory();
+  }
+  /* Called after an instruction during Run or Instant: stop if the PC has reached a breakpoint */
+  function hitBreakpoint() {
+    if (!bpEnabled || cpu.halted || cpu.waiting || !breakpoints[cpu.pc]) { return false; }
+    cpu.stageName = "Breakpoint";
+    cpu.text += " Paused at the breakpoint on " + where(cpu.pc) + ", before it runs. Press Step, Run or Instant to carry on.";
+    return true;
+  }
+
+  /* ---------- Instant execution ---------- */
+  const INSTANT_LIMIT = 10000;
+  function runInstant() {
+    if (!cpu || cpu.halted || cpu.waiting || program.lines.length === 0) { return; }
+    stopRun();
+    instant = true;
+    history.push(snapshot());
+    if (history.length > 2000) { history.shift(); }
+    let count = 0;
+    let atBreak = false;
+    while (!cpu.halted && !cpu.waiting && count < INSTANT_LIMIT) {
+      runOneInstruction();
+      count += 1;
+      if (hitBreakpoint()) { atBreak = true; break; }
+    }
+    if (atBreak) { instant = false; }
+    if (!atBreak && !cpu.halted && !cpu.waiting) {
+      cpu.stageName = "Paused";
+      cpu.instr = "";
+      cpu.text = "Paused after " + INSTANT_LIMIT.toLocaleString("en-GB") + " instructions without reaching HLT, so this may be an infinite loop. Press Instant to carry on, or Step to watch what it is doing.";
+    }
+    if (!cpu.waiting) { instant = false; }
+    render(true);
+  }
+
+  /* ---------- Running ---------- */
+  function delay() { return SPEEDS[parseInt(byId("speed").value, 10) - 1]; }
+  function atMaxSpeed() { return parseInt(byId("speed").value, 10) === MAX_SPEED; }
+  function tick() {
+    if (!running) { return; }
+    const turbo = atMaxSpeed();
+    document.querySelector(".app").classList.toggle("turbo", turbo);
+    if (turbo) {
+      /* Up to three instructions per screen refresh, ending the batch early whenever a value is output */
+      const outsBefore = cpu.outputs.length;
+      let n = 0;
+      let atBreak = false;
+      do {
+        step(true);
+        n += 1;
+        atBreak = hitBreakpoint();
+      } while (!atBreak && n < 3 && !cpu.halted && !cpu.waiting && cpu.outputs.length === outsBefore);
+      if (atBreak) { render(false); stopRun(); return; }
+    } else {
+      step(false);
+      if (hitBreakpoint()) { renderExplain(); stopRun(); return; }
+    }
+    if (cpu.halted) { stopRun(); return; }
+    if (cpu.waiting) { return; }
+        if (turbo) { rafId = window.requestAnimationFrame(tick); }
+    else { timer = window.setTimeout(tick, delay()); }
+  }
+  function startRun() {
+    if (cpu.halted || program.lines.length === 0) { return; }
+    instant = false;
+    running = true;
+    updateButtons();
+    if (!cpu.waiting) { tick(); }
+  }
+  function stopRun() {
+    running = false;
+    instant = false;
+    if (timer) { window.clearTimeout(timer); timer = null; }
+    if (rafId) { window.cancelAnimationFrame(rafId); rafId = null; }
+    document.querySelector(".app").classList.remove("turbo");
+    updateButtons();
+  }
+
+  /* ---------- Loading ---------- */
+  function loadProgram(prog, text) {
+    stopRun();
+    breakpoints = {};
+    program = prog;
+    source = text;
+    buildMemory();
+    buildVars();
+    resetCpu();
+  }
+  function resetCpu() {
+    stopRun();
+    cpu = freshCpu();
+    history = [];
+    shown = {};
+    lastRegs = {};
+    render(false);
+  }
+
+  /* mode: "edit" changes this row's line; "after" / "before" inserts a new line next to it */
+  function openLineEditor(row, mode) {
+    if (document.querySelector(".mem-edit")) { return; }
+    stopRun();
+    const lineNo = parseInt(row.getAttribute("data-line"), 10);
+    const addr = parseInt(row.getAttribute("data-addr"), 10);
+    const original = mode === "edit" ? (source.split(/\r?\n/)[lineNo - 1] || "").trim().replace(/\s+/g, " ") : "";
+    let host = row;
+    let tempRow = null;
+    if (mode !== "edit") {
+      tempRow = document.createElement("div");
+      tempRow.className = "mrow is-new";
+      tempRow.innerHTML = '<span class="c-gut"></span><span class="c-addr">+</span><span></span><span></span><span></span><span class="c-code"></span>';
+      row.parentNode.insertBefore(tempRow, mode === "after" ? row.nextSibling : row);
+      host = tempRow;
+      positionPcBox();
+    }
+    const box = document.createElement("div");
+    box.className = "mem-edit";
+    const input = document.createElement("input");
+    input.type = "text";
+    input.id = "memEdit";
+    input.value = original;
+    input.spellcheck = false;
+    input.autocomplete = "off";
+    if (mode === "edit") {
+      input.setAttribute("aria-label", "Edit address " + pad2(addr));
+    } else {
+      input.placeholder = "e.g. LOOP LDA COUNT";
+      input.setAttribute("aria-label", "New line " + (mode === "after" ? "after" : "before") + " address " + pad2(addr));
+    }
+    const msg = document.createElement("span");
+    msg.className = "mem-edit-msg";
+    msg.textContent = mode === "edit" ? "Enter to save \u00B7 Esc to cancel \u00B7 clear to delete" : "Enter to insert \u00B7 Esc to cancel";
+    box.appendChild(input);
+    box.appendChild(msg);
+    host.appendChild(box);
+    input.focus();
+    input.select();
+
+    function close() {
+      if (box.parentNode) { box.parentNode.removeChild(box); }
+      if (tempRow && tempRow.parentNode) {
+        tempRow.parentNode.removeChild(tempRow);
+        positionPcBox();
+      }
+    }
+    function save() {
+      const lines = source.split(/\r?\n/);
+      const value = input.value.trim();
+      if (mode === "edit") {
+        if (value === original) { close(); return; }
+        if (value === "") { lines.splice(lineNo - 1, 1); }
+        else { lines[lineNo - 1] = value; }
+      } else {
+        if (value === "") { close(); return; }
+        lines.splice(mode === "after" ? lineNo : lineNo - 1, 0, value);
+      }
+      const text = formatSource(lines.join("\n"));
+      const result = assemble(text);
+      if (result.errors.length > 0) {
+        box.classList.add("bad");
+        msg.textContent = result.errors[0].replace(/^Line \d+: /, "");
+        input.focus();
+        return;
+      }
+      loadProgram(result, text);
+      store("source", text);
+    }
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); save(); }
+      else if (e.key === "Escape") { e.preventDefault(); close(); }
+      e.stopPropagation();
+    });
+    input.addEventListener("input", function () {
+      box.classList.remove("bad");
+    });
+    input.addEventListener("blur", function () {
+      window.setTimeout(function () {
+        if (document.activeElement !== input) { close(); }
+      }, 150);
+    });
+  }
+
+  function buildMemory() {
+    const holder = byId("memRows");
+    let html = "";
+    let firstData = true;
+    program.lines.forEach(function (ln) {
+      let cls = "mrow";
+      if (ln.op === "DAT") {
+        cls += " is-data";
+        if (firstData) { cls += " first-data"; firstData = false; }
+      }
+      html += '<div class="' + cls + ' editable" data-addr="' + ln.addr + '" data-line="' + ln.lineNo + '">' +
+        '<span class="c-gut"></span>' +
+        '<span class="c-addr">' + pad2(ln.addr) + "</span>" +
+        '<span class="c-label">' + escapeHtml(ln.label) + "</span>" +
+        '<span class="c-op">' + ln.op + "</span>" +
+        '<span class="c-arg">' + escapeHtml(ln.operand) + "</span>" +
+        '<span class="c-code"></span>' +
+        (ln.addr === 0 ? '<button class="row-add top" type="button" data-mode="before" tabindex="-1" aria-label="Insert a line at the start">+</button>' : "") +
+        '<button class="row-add" type="button" data-mode="after" tabindex="-1" aria-label="Insert a line after address ' + pad2(ln.addr) + '">+</button></div>';
+    });
+    const extras = program.extras;
+    let note = program.lines.length === 0 ? "Empty" : "Addresses 00\u2013" + pad2(program.lines.length - 1);
+    if (program.lines.length === 0) {
+      html = '<div class="mem-empty">Memory is empty.<br>Press <b>Program</b> to write a new program.</div>';
+    }
+    if (extras.length > 0) {
+      const gapStart = program.lines.length;
+      const gapEnd = extras[0] - 1;
+      html += '<div class="mem-gap" aria-hidden="true"><span>\u22EE</span>' +
+        (gapEnd >= gapStart ? (gapEnd === gapStart ? "Address " + pad2(gapStart) : "Addresses " + pad2(gapStart) + "\u2013" + pad2(gapEnd)) + " not shown" : "") +
+        "</div>";
+      extras.forEach(function (addr, i) {
+        if (i > 0 && addr > extras[i - 1] + 1) {
+          html += '<div class="mem-gap" aria-hidden="true"><span>\u22EE</span></div>';
+        }
+        html += '<div class="mrow is-data is-extra" data-addr="' + addr + '">' +
+          '<span class="c-gut"></span>' +
+          '<span class="c-addr">' + pad2(addr) + "</span>" +
+          '<span class="c-label"></span><span class="c-op"></span><span class="c-arg"></span>' +
+          '<span class="c-code"></span></div>';
+      });
+      note += " and " + extras.map(pad2).join(", ");
+    }
+    holder.innerHTML = html;
+    rowEls = {};
+    const rows = holder.querySelectorAll(".mrow");
+    let i;
+    for (i = 0; i < rows.length; i++) { rowEls[rows[i].getAttribute("data-addr")] = rows[i]; }
+    byId("memNote").textContent = note;
+    fitMemory();
+  }
+
+  function buildVars() {
+    const box = byId("vars");
+    const data = program.lines.filter(function (ln) { return ln.op === "DAT"; });
+    varCards = {};
+    if (data.length === 0 && program.extras.length === 0) {
+      box.innerHTML = program.lines.length === 0 ?
+        '<div class="vars-empty">Variables made with DAT will appear here.</div>' :
+        '<div class="vars-empty">This program has no DAT locations, so there are no variables to show.</div>';
+      return;
+    }
+    let html = "";
+    data.forEach(function (ln) {
+      const name = ln.label ? escapeHtml(ln.label) : "Address " + pad2(ln.addr);
+      html += '<article class="card var-card" data-addr="' + ln.addr + '">' +
+        '<div class="card-head"><h3>' + name + "</h3><small>Address " + pad2(ln.addr) + '</small><em class="badge"></em></div>' +
+        '<div class="trail-box"><ol class="trail"></ol></div></article>';
+    });
+    program.extras.forEach(function (addr) {
+      html += '<article class="card var-card" data-addr="' + addr + '">' +
+        '<div class="card-head"><h3>Address ' + pad2(addr) + '</h3><small>No DAT</small><em class="badge"></em></div>' +
+        '<div class="trail-box"><ol class="trail"></ol></div></article>';
+    });
+    box.innerHTML = html;
+    const cards = box.querySelectorAll(".var-card");
+    let i;
+    for (i = 0; i < cards.length; i++) {
+      varCards[cards[i].getAttribute("data-addr")] = cards[i];
+    }
+  }
+
+  function fitMemory() {
+    if (!program) { return; }
+    const body = byId("memBody");
+    const panel = byId("memoryPanel");
+    const gaps = byId("memRows").querySelectorAll(".mem-gap").length;
+    const n = Math.max(program.lines.length + program.extras.length + gaps * 0.6, 8);
+    let labW = 3;
+    let argW = 3;
+    program.lines.forEach(function (ln) {
+      labW = Math.max(labW, ln.label.length);
+      argW = Math.max(argW, ln.operand.length);
+    });
+    const hasData = program.extras.length > 0 || program.lines.some(function (ln) { return ln.op === "DAT"; });
+    const codeW = showCodes ? 3.8 : (hasData ? 3.8 : 0);
+    panel.style.setProperty("--labw", labW + "ch");
+    panel.style.setProperty("--argw", argW + "ch");
+    panel.style.setProperty("--codew", codeW + "ch");
+    byId("codeHead").textContent = showCodes ? "Contents" : (hasData ? "Value" : "");
+    /* gutter + address + label + op + operand + code, plus five column gaps and side padding */
+    const totalCh = 2.4 + 3 + labW + 3.5 + argW + codeW + 5 * 0.9 + 0.8;
+    let rowH;
+    let font;
+    if (window.innerWidth <= 900) {
+      rowH = 46;
+      font = Math.min(20, (body.clientWidth - 4) / (totalCh * 0.62));
+    } else {
+      rowH = Math.floor(body.clientHeight / n);
+      rowH = Math.max(30, Math.min(rowH, 120));
+      font = Math.min(rowH * 0.52, (body.clientWidth - 4) / (totalCh * 0.62));
+      font = Math.max(13, font);
+    }
+    panel.style.setProperty("--rowh", rowH + "px");
+    panel.style.setProperty("--memfont", font + "px");
+    positionPcBox();
+  }
+
+  /* ---------- Rendering ---------- */
+  /* ---------- Moving copies: a copy of the value glides from source to destination ---------- */
+  let flights = [];
+  function finishFlights() {
+    const list = flights;
+    flights = [];
+    list.forEach(function (f) { f(); });
+  }
+  function moveEl(where) {
+    if (where === "acc") { return byId("accTrail").querySelector("li.cur"); }
+    if (where === "output") { return byId("outList").querySelector("li.cur"); }
+    if (where === "input") { return byId("inList").querySelector("li.cur"); }
+    const card = varCards[String(where)];
+    if (card) { return card.querySelector(".trail li.cur"); }
+    const row = rowEls[where];
+    return row ? row.querySelector(".c-code") : null;
+  }
+  /* A copy of some text flying from one rectangle to another, scaled to the destination's font size */
+  function flyText(text, fromRect, fromSize, toRect, toSize, duration, lift) {
+    const fly = document.createElement("div");
+    fly.className = "flyer";
+    fly.textContent = text;
+    fly.style.left = fromRect.left + "px";
+    fly.style.top = fromRect.top + "px";
+    fly.style.fontSize = fromSize + "px";
+    document.body.appendChild(fly);
+    const dx = toRect.left - fromRect.left;
+    const dy = toRect.top - fromRect.top;
+    const scale = toSize / fromSize;
+    if (fly.animate) {
+      fly.animate([
+        { transform: "translate(0, 0) scale(1)" },
+        { transform: "translate(" + (dx * 0.5) + "px, " + (dy * 0.5 - lift) + "px) scale(" + ((1 + scale) / 2) + ")", offset: 0.5 },
+        { transform: "translate(" + dx + "px, " + dy + "px) scale(" + scale + ")" }
+      ], { duration: duration, easing: "cubic-bezier(.45, .05, .35, 1)", fill: "forwards" });
+    }
+    return fly;
+  }
+
+  /* ADD / SUB: the operand flies in, the accumulator's old value floats up, they meet as "a + b = r",
+     then the answer drops into the accumulator. On overflow the answer shows in red and does not land. */
+  function animateSum(total) {
+    const accList = byId("accTrail");
+    const cur = accList.querySelector("li.cur");
+    const over = cpu.overflow === true;
+    const accSrc = over ? cur : (cur ? cur.previousElementSibling : null);
+    const opSrc = moveEl(cpu.move.from);
+    if (!cur || !accSrc || accSrc.tagName !== "LI" || !opSrc || !opSrc.isConnected) { return false; }
+    const a = over ? cpu.acc : cpu.accTrail[cpu.accTrail.length - 2];
+    const b = cpu.mdr;
+    const r = cpu.move.kind === "+" ? a + b : a - b;
+    const curSize = parseFloat(window.getComputedStyle(cur).fontSize) || 40;
+    const eqSize = Math.max(18, curSize * 0.72);
+
+    const eq = document.createElement("div");
+    eq.className = "eqn" + (over ? " eqn-over" : "");
+    eq.style.fontSize = eqSize + "px";
+    eq.innerHTML = '<span class="eq-a"></span><span class="eq-op"></span><span class="eq-b"></span><span class="eq-eq">=</span><span class="eq-r"></span>';
+    eq.querySelector(".eq-a").textContent = fmt(a);
+    eq.querySelector(".eq-op").textContent = cpu.move.kind;
+    eq.querySelector(".eq-b").textContent = fmt(b);
+    eq.querySelector(".eq-r").textContent = fmt(r);
+    document.body.appendChild(eq);
+    const card = byId("accCard").getBoundingClientRect();
+    const w = eq.offsetWidth;
+    /* centred on the ACC card, or starting at its left edge when the sum is wider than the card */
+    const ideal = w > card.width - 8 ? card.left + 4 : card.left + card.width / 2 - w / 2;
+    const left = Math.max(8, Math.min(window.innerWidth - w - 8, ideal));
+    eq.style.left = left + "px";
+    eq.style.top = Math.max(8, card.top + 6) + "px";
+    void eq.offsetWidth;
+    eq.classList.add("on");
+
+    const aRect = eq.querySelector(".eq-a").getBoundingClientRect();
+    const bRect = eq.querySelector(".eq-b").getBoundingClientRect();
+    const fromA = accSrc.getBoundingClientRect();
+    const fromB = opSrc.getBoundingClientRect();
+    const t1 = total * 0.33;
+    const t2 = total * 0.66;
+    const parts = [];
+    parts.push(flyText(fmt(a), fromA, parseFloat(window.getComputedStyle(accSrc).fontSize) || 20, aRect, eqSize, t1, 20));
+    parts.push(flyText(fmt(b), fromB, parseFloat(window.getComputedStyle(opSrc).fontSize) || 20, bRect, eqSize, t1, 50));
+
+    if (!over) {
+      cur.style.visibility = "hidden";
+      accList.style.setProperty("--strike-delay", Math.round(total) + "ms");
+    }
+    const timers = [];
+    let done = false;
+    function clearParts() {
+      parts.forEach(function (el) { if (el.parentNode) { el.parentNode.removeChild(el); } });
+      parts.length = 0;
+    }
+    function land() {
+      if (done) { return; }
+      done = true;
+      timers.forEach(function (t) { window.clearTimeout(t); });
+      clearParts();
+      if (eq.parentNode) { eq.parentNode.removeChild(eq); }
+      if (!over) {
+        cur.style.visibility = "";
+        accList.style.removeProperty("--strike-delay");
+        cur.classList.remove("fresh");
+        void cur.offsetWidth;
+        cur.classList.add("fresh");
+      }
+    }
+    flights.push(land);
+    timers.push(window.setTimeout(function () {
+      clearParts();
+      eq.classList.add("show-ab", "show-op");
+    }, t1));
+    timers.push(window.setTimeout(function () { eq.classList.add("show-r"); }, t1 + total * 0.1));
+    timers.push(window.setTimeout(function () {
+      if (over) {
+        eq.classList.add("fade");
+        timers.push(window.setTimeout(land, total - t2));
+        return;
+      }
+      const rEl = eq.querySelector(".eq-r");
+      const rRect = rEl.getBoundingClientRect();
+      rEl.style.visibility = "hidden";
+      eq.classList.add("fade");
+      parts.push(flyText(fmt(r), rRect, eqSize, cur.getBoundingClientRect(), curSize, total - t2, -10));
+      timers.push(window.setTimeout(land, total - t2));
+    }, t2));
+    return true;
+  }
+
+  /* gap: time until the next step when running (0 when stepping by hand) */
+  function animateMove(gap) {
+    if (!animateMoves || !cpu.move) { return; }
+    /* No reduced-motion check here: this only runs when the teacher has switched it on in Options */
+    if (cpu.move.kind) {
+      const total = gap > 0 ? Math.min(2100, gap * 0.85) : 2100;
+      if (total >= 900 && animateSum(total)) { return; }
+    }
+    const duration = gap > 0 ? Math.min(750, gap * 0.7) : 750;
+    if (duration < 180) { return; }
+    const src = moveEl(cpu.move.from);
+    const dest = moveEl(cpu.move.to);
+    if (!src || !dest || !src.isConnected || !dest.isConnected) { return; }
+    const from = src.getBoundingClientRect();
+    const to = dest.getBoundingClientRect();
+    if (from.width === 0 || to.width === 0) { return; }
+    const style = window.getComputedStyle(src);
+    const destSize = parseFloat(window.getComputedStyle(dest).fontSize) || 16;
+    const srcSize = parseFloat(style.fontSize) || 16;
+    const fly = document.createElement("div");
+    fly.className = "flyer";
+    fly.textContent = cpu.move.from === "acc" ? fmt(cpu.acc) :
+      (cpu.move.from === "input" ? fmt(cpu.inputs[cpu.inputs.length - 1]) : fmt(cpu.mdr));
+    fly.style.left = from.left + "px";
+    fly.style.top = from.top + "px";
+    fly.style.fontSize = style.fontSize;
+    document.body.appendChild(fly);
+    /* hide the new value (and hold its crossing-out) until the copy lands */
+    const destList = dest.closest(".trail");
+    dest.style.visibility = "hidden";
+    if (destList) { destList.style.setProperty("--strike-delay", duration + "ms"); }
+    const dx = to.left - from.left;
+    const dy = to.top - from.top;
+    const scale = destSize / srcSize;
+    let done = false;
+    function land() {
+      if (done) { return; }
+      done = true;
+      if (fly.parentNode) { fly.parentNode.removeChild(fly); }
+      dest.style.visibility = "";
+      if (destList) {
+        destList.style.removeProperty("--strike-delay");
+        dest.classList.remove("fresh");
+        void dest.offsetWidth;
+        dest.classList.add("fresh");
+      }
+    }
+    flights.push(land);
+    if (fly.animate) {
+      const anim = fly.animate([
+        { transform: "translate(0, 0) scale(1)", opacity: 0.95 },
+        { transform: "translate(" + (dx * 0.5) + "px, " + (dy * 0.5 - 40) + "px) scale(" + ((1 + scale) / 2 * 1.15) + ")", opacity: 1, offset: 0.5 },
+        { transform: "translate(" + dx + "px, " + dy + "px) scale(" + scale + ")", opacity: 1 }
+      ], { duration: duration, easing: "cubic-bezier(.45, .05, .35, 1)" });
+      anim.onfinish = land;
+    } else {
+      window.setTimeout(land, duration);
+    }
+  }
+
+  function render(animate) {
+    finishFlights();
+    renderMemory();
+    renderRegs(animate);
+    renderTrails(animate);
+    renderExplain();
+    updateButtons();
+    const box = byId("inputBox");
+    if (cpu.waiting && box.hidden) {
+      box.hidden = false;
+      byId("inputValue").value = "";
+      byId("inputError").hidden = true;
+      byId("inputValue").focus();
+    } else if (!cpu.waiting) {
+      box.hidden = true;
+    }
+  }
+
+  function renderMemory() {
+    program.lines.forEach(function (ln) { renderRow(ln.addr, ln.code); });
+    program.extras.forEach(function (addr) { renderRow(addr, 0); });
+    positionPcBox();
+  }
+
+  function renderRow(addr, startCode) {
+    const row = rowEls[addr];
+    row.classList.toggle("bp", bpEnabled && breakpoints[addr] === true);
+    row.classList.toggle("is-pc", cpu.pc === addr && !cpu.halted);
+    row.classList.toggle("is-read", cpu.read === addr);
+    row.classList.toggle("is-written", cpu.written === addr);
+    row.classList.toggle("is-exec", cpu.execAddr === addr);
+    row.classList.toggle("changed", cpu.mem[addr] !== startCode);
+    const isData = row.classList.contains("is-data");
+    let text = "";
+    if (showCodes) { text = fmtCode(cpu.mem[addr]); }
+    else if (isData) { text = fmt(cpu.mem[addr]); }
+    row.querySelector(".c-code").textContent = text;
+  }
+
+  function positionPcBox() {
+    if (!cpu) { return; }
+    const box = byId("pcBox");
+    const warn = byId("pcWarn");
+    const row = rowEls[cpu.pc];
+    box.classList.toggle("halted", cpu.halted);
+    if (!row) {
+      box.hidden = true;
+      warn.hidden = cpu.halted || program.lines.length === 0;
+      warn.textContent = "PC is " + pad2(cpu.pc) + ", past the end of the program";
+      return;
+    }
+    warn.hidden = true;
+    box.hidden = false;
+    box.style.transform = "translateY(" + row.offsetTop + "px)";
+    box.style.height = row.offsetHeight + "px";
+    const body = byId("memBody");
+    if (row.offsetTop < body.scrollTop) {
+      body.scrollTop = row.offsetTop;
+    } else if (row.offsetTop + row.offsetHeight > body.scrollTop + body.clientHeight) {
+      body.scrollTop = row.offsetTop + row.offsetHeight - body.clientHeight;
+    }
+  }
+
+  function renderReg(name, html) {
+    const el = byId("reg-" + name);
+    el.querySelector(".reg-cur").innerHTML = html;
+    if (lastRegs[name] !== undefined && lastRegs[name] !== cpu[name]) {
+      el.classList.remove("flash");
+      void el.offsetWidth;
+      el.classList.add("flash");
+    }
+    lastRegs[name] = cpu[name];
+  }
+
+  function renderRegs(animate) {
+    if (!animate) { lastRegs = {}; }
+    renderReg("pc", pad2(cpu.pc));
+    renderReg("mar", pad2(cpu.mar));
+    renderReg("mdr", fmt(cpu.mdr));
+    let cirHtml;
+    if (cpu.cir >= 0 && cpu.cir <= 999) {
+      const digits = pad(cpu.cir, 3);
+      cirHtml = '<span class="cir-op">' + digits.charAt(0) + "</span>" + digits.substring(1);
+    } else {
+      cirHtml = fmt(cpu.cir);
+    }
+    renderReg("cir", cirHtml);
+    byId("cycleNo").textContent = String(cpu.cycle);
+  }
+
+  function renderTrail(list, values, key, animate) {
+    const before = shown[key] || 0;
+    const grew = animate && values.length > before;
+    let html = "";
+    let i;
+    let start = 0;
+    if (trailMode === "recent") {
+      start = Math.max(0, values.length - 1 - keepCount);
+      if (start > 0) {
+        html += '<li class="more">' + start + (start === 1 ? " earlier value" : " earlier values") + " hidden</li>";
+      }
+    }
+    for (i = start; i < values.length; i++) {
+      const last = i === values.length - 1;
+      let cls = last ? "cur" : "old";
+      if (grew && last) { cls += " fresh"; }
+      if (grew && i === values.length - 2) { cls += " struck-now"; }
+      html += '<li class="' + cls + '">' + fmt(values[i]) + "</li>";
+    }
+    list.innerHTML = html;
+    shown[key] = values.length;
+    scrollToEnd(list.parentNode);
+  }
+
+  function renderIoList(list, items, key, animate, isOutput) {
+    const before = shown[key] || 0;
+    const grew = animate && items.length > before;
+    let html = "";
+    let i;
+    for (i = 0; i < items.length; i++) {
+      const last = i === items.length - 1;
+      let cls = last ? "cur" : "";
+      if (grew && last) { cls += " fresh"; }
+      let inner;
+      if (isOutput && items[i].ch !== null) {
+        inner = '<span class="ch">‘' + escapeHtml(items[i].ch) + "’</span><small>" + fmt(items[i].v) + "</small>";
+      } else {
+        inner = fmt(isOutput ? items[i].v : items[i]);
+      }
+      html += '<li class="' + cls + '">' + inner + "</li>";
+    }
+    if (items.length === 0) {
+      html = '<li class="io-empty">' + (isOutput ? "Nothing output yet" : "No inputs yet") + "</li>";
+    }
+    list.innerHTML = html;
+    shown[key] = items.length;
+    scrollToEnd(list.parentNode);
+  }
+
+  function scrollToEnd(box) {
+    box.scrollTop = box.scrollHeight;
+    box.classList.toggle("overflowing", box.scrollHeight > box.clientHeight + 1);
+  }
+
+  /* Pop a badge over the card corner, then let it fade; "stay" keeps it (overflow) */
+  function setBadge(el, text, animate, stay) {
+    el.textContent = text;
+    el.classList.remove("pop");
+    el.classList.toggle("stay", stay && text !== "");
+    if (text !== "" && !stay && animate) {
+      void el.offsetWidth;
+      el.classList.add("pop");
+    }
+  }
+
+  function renderTrails(animate) {
+    renderTrail(byId("accTrail"), cpu.accTrail, "acc", animate);
+    const accCard = byId("accCard");
+    accCard.classList.toggle("is-written", cpu.accWritten && cpu.stageName === "Execute");
+    setBadge(byId("accBadge"), cpu.overflow ? "overflow" : (cpu.accWritten && cpu.stageName === "Execute" ? "updated" : ""), animate, cpu.overflow === true);
+    accCard.classList.toggle("is-overflow", cpu.overflow === true);
+    Object.keys(varCards).forEach(function (key) {
+      const card = varCards[key];
+      const addr = parseInt(key, 10);
+      renderTrail(card.querySelector(".trail"), cpu.varTrails[addr], "var" + key, animate);
+      const isRead = cpu.read === addr;
+      const isWritten = cpu.written === addr;
+      card.classList.toggle("is-read", isRead);
+      card.classList.toggle("is-written", isWritten);
+      setBadge(card.querySelector(".badge"), isWritten ? "written" : (isRead ? "read" : ""), animate, false);
+    });
+    renderIoList(byId("inList"), cpu.inputs, "in", animate, false);
+    renderIoList(byId("outList"), cpu.outputs, "out", animate, true);
+  }
+
+  function renderExplain() {
+    const box = byId("explain");
+    const chip = byId("instrChip");
+    let stage = cpu.stageName;
+    if (stage === "Execute") { stage = "Executed"; }
+    if (cpu.halted) { stage = cpu.error ? (cpu.errorLabel || "Error") : "Halted"; }
+    else if (cpu.waiting) { stage = "Input"; }
+    byId("stagePill").textContent = stage;
+    box.classList.toggle("error", cpu.error);
+    box.classList.toggle("halted", cpu.halted && !cpu.error);
+    box.classList.toggle("at-break", stage === "Breakpoint");
+    chip.hidden = cpu.instr === "";
+    box.classList.toggle("no-chip", cpu.instr === "");
+    chip.textContent = cpu.instr;
+    byId("explainText").textContent = cpu.text;
+  }
+
+  function updateButtons() {
+    if (!cpu) { return; }
+    const empty = program.lines.length === 0;
+    byId("btnStep").disabled = empty || cpu.halted || cpu.waiting;
+    byId("btnBack").disabled = history.length === 0;
+    byId("btnRun").disabled = empty || cpu.halted;
+    byId("btnInstant").disabled = empty || cpu.halted || cpu.waiting;
+    byId("btnRun").textContent = running ? "Pause" : "Run";
+  }
+
+  /* ---------- Editor ---------- */
+  function openEditor() {
+    stopRun();
+    byId("source").value = source;
+    byId("errors").hidden = true;
+    byId("saveStatus").textContent = "";
+    byId("editor").hidden = false;
+    updateGutter();
+    byId("source").focus();
+  }
+  function closeEditor() { byId("editor").hidden = true; }
+  /* Tidy source: capitals, labels / mnemonics / operands / comments in aligned columns */
+  function formatSource(text) {
+    const rows = [];
+    let labW = 0;
+    let argW = 0;
+    text.split(/\r?\n/).forEach(function (raw) {
+      let code = raw;
+      let comment = "";
+      const cut = raw.indexOf("//");
+      if (cut >= 0) {
+        code = raw.substring(0, cut);
+        comment = raw.substring(cut).trim();
+      }
+      code = code.trim();
+      if (code === "") {
+        rows.push({ kind: "plain", text: comment });
+        return;
+      }
+      const parts = code.split(/\s+/);
+      let label = "";
+      let start = 0;
+      if (!isMnemonic(parts[0])) { label = parts[0]; start = 1; }
+      if (parts.length > start + 2 || (label !== "" && !isMnemonic(parts[start] || ""))) {
+        rows.push({ kind: "plain", text: raw.trim() });
+        return;
+      }
+      const row = {
+        kind: "code",
+        label: label.toUpperCase(),
+        op: parts[start].toUpperCase(),
+        arg: (parts[start + 1] || "").toUpperCase(),
+        comment: comment
+      };
+      labW = Math.max(labW, row.label.length);
+      argW = Math.max(argW, row.arg.length);
+      rows.push(row);
+    });
+
+    const labCol = Math.max(labW + 2, 8);
+    const opCol = 5;
+    const argCol = Math.max(argW, 4) + 3;
+    function padTo(str, width) {
+      let out = str;
+      while (out.length < width) { out += " "; }
+      return out;
+    }
+    const lines = rows.map(function (row) {
+      if (row.kind === "plain") { return row.text; }
+      let line = padTo(row.label, labCol) + padTo(row.op, opCol) + row.arg;
+      if (row.comment !== "") { line = padTo(line, labCol + opCol + argCol) + row.comment; }
+      return line.replace(/\s+$/, "");
+    });
+    while (lines.length > 0 && lines[lines.length - 1] === "") { lines.pop(); }
+    return lines.join("\n") + "\n";
+  }
+
+  function formatEditor() {
+    const ta = byId("source");
+    ta.value = formatSource(ta.value);
+    updateGutter();
+  }
+
+  /* Column positions the formatter uses for this text (in characters) */
+  function editorColumns(text) {
+    let labW = 0;
+    let argW = 0;
+    text.split(/\r?\n/).forEach(function (raw) {
+      let code = raw;
+      const cut = code.indexOf("//");
+      if (cut >= 0) { code = code.substring(0, cut); }
+      code = code.trim();
+      if (code === "") { return; }
+      const parts = code.split(/\s+/);
+      let start = 0;
+      if (!isMnemonic(parts[0])) {
+        labW = Math.max(labW, parts[0].length);
+        start = 1;
+      }
+      argW = Math.max(argW, (parts[start + 1] || "").length);
+    });
+    const labCol = Math.max(labW + 2, 8);
+    return { label: 0, op: labCol, arg: labCol + 5, comment: labCol + 5 + Math.max(argW, 4) + 3 };
+  }
+  let chCache = { size: "", width: 0 };
+  function charWidth(ta) {
+    const size = window.getComputedStyle(ta).fontSize;
+    if (chCache.size !== size || chCache.width === 0) {
+      const probe = document.createElement("span");
+      probe.style.cssText = "position:absolute;visibility:hidden;white-space:pre;font-family:var(--font-mono);font-size:" + size;
+      probe.textContent = "0000000000000000000000000000000000000000";
+      document.body.appendChild(probe);
+      chCache = { size: size, width: probe.getBoundingClientRect().width / 40 };
+      document.body.removeChild(probe);
+    }
+    return chCache.width;
+  }
+  /* Line the editor headings up with the code columns (and follow sideways scrolling) */
+  function updateCodeHead() {
+    const ta = byId("source");
+    const gut = byId("gutter");
+    if (byId("editor").hidden) { return; }
+    const cols = editorColumns(ta.value);
+    const ch = charWidth(ta);
+    const gutterEdge = 1 + gut.offsetWidth;
+    const base = gutterEdge + parseFloat(window.getComputedStyle(ta).paddingLeft) - ta.scrollLeft;
+    byId("chAddr").style.width = gutterEdge + "px";
+    const spans = byId("codeHeadRow").querySelectorAll(".ch-col");
+    let i;
+    let minLeft = -Infinity;
+    for (i = 0; i < spans.length; i++) {
+      const left = Math.max(base + cols[spans[i].getAttribute("data-col")] * ch, minLeft);
+      spans[i].style.left = left + "px";
+      minLeft = left + spans[i].offsetWidth + 8;
+      spans[i].style.visibility = left < gutterEdge ? "hidden" : "";
+    }
+  }
+
+  /* Memory address beside each line that will occupy memory; red if the line has an error */
+  function updateGutter() {
+    const ta = byId("source");
+    const result = assemble(ta.value);
+    const raw = ta.value.split(/\r?\n/);
+    let addr = 0;
+    const out = raw.map(function (line, i) {
+      let code = line;
+      const cut = code.indexOf("//");
+      if (cut >= 0) { code = code.substring(0, cut); }
+      if (code.trim() === "") { return ""; }
+      const label = pad2(addr);
+      addr += 1;
+      const err = result.errorLines[String(i + 1)];
+      return err ? '<span class="bad" title="' + escapeHtml(err).replace(/"/g, "&quot;") + '">' + label + "</span>" : label;
+    });
+    byId("gutter").innerHTML = out.join("\n") + "\n\n";
+    byId("gutter").scrollTop = ta.scrollTop;
+    updateCodeHead();
+  }
+
+  function loadFromEditor() {
+    formatEditor();
+    const text = byId("source").value;
+    const result = assemble(text);
+    const errBox = byId("errors");
+    if (result.errors.length > 0) {
+      let html = "<ul>";
+      result.errors.forEach(function (msg) { html += "<li>" + escapeHtml(msg) + "</li>"; });
+      errBox.innerHTML = html + "</ul>";
+      errBox.hidden = false;
+      return;
+    }
+    loadProgram(result, text);
+    store("source", text);
+    closeEditor();
+  }
+  /* Save the editor's program as a .txt file. Published page: the platform's downloads capability (viewer confirms).
+     Opened as a local file: an ordinary download link. */
+  function saveProgram() {
+    const status = byId("saveStatus");
+    formatEditor();
+    let name = byId("fileName").value.trim().replace(/\.txt$/i, "").replace(/[\\\/:*?"<>|]+/g, "-");
+    if (name === "") { name = "lmc-program"; }
+    const filename = name + ".txt";
+    const text = byId("source").value;
+    status.classList.remove("bad");
+    status.textContent = "";
+    function fallback() {
+      const url = URL.createObjectURL(new Blob([text], { type: "text/plain" }));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+      status.textContent = "Saved " + filename;
+    }
+    fallback();
+  }
+
+  function readFile(file) {
+    if (!file) { return; }
+    byId("fileName").value = file.name.replace(/\.[^.]*$/, "") || "lmc-program";
+    const reader = new FileReader();
+    reader.onload = function () {
+      byId("source").value = formatSource(String(reader.result));
+      updateGutter();
+    };
+    reader.readAsText(file);
+  }
+
+  /* ---------- Theme and size ---------- */
+  function setTheme(theme) {
+    document.documentElement.setAttribute("data-theme", theme);
+    byId("btnTheme").textContent = theme === "dark" ? "Light mode" : "Dark mode";
+  }
+  /* Chalkboard and Retro terminal have one look, so the light/dark button is hidden for them */
+  const SINGLE_LOOK = ["chalk", "terminal"];
+  const STYLE_IDS = { classic: "styleClassic", chalk: "styleChalk", blueprint: "styleBlueprint", terminal: "styleTerminal", contrast: "styleContrast" };
+  function setStyle(name) {
+    if (!STYLE_IDS[name]) { name = "classic"; }
+    if (name === "classic") { document.documentElement.removeAttribute("data-style"); }
+    else { document.documentElement.setAttribute("data-style", name); }
+    byId(STYLE_IDS[name]).checked = true;
+    byId("btnTheme").hidden = SINGLE_LOOK.indexOf(name) >= 0;
+    store("style", name);
+    fitMemory();
+  }
+  function setScale(value) {
+    scale = Math.max(0.7, Math.min(1.7, Math.round(value * 10) / 10));
+    document.documentElement.style.setProperty("--s", String(scale));
+    store("scale", String(scale));
+  }
+
+  /* ---------- Wiring ---------- */
+  function init() {
+    setTheme("light");
+    Object.keys(STYLE_IDS).forEach(function (name) {
+      byId(STYLE_IDS[name]).addEventListener("change", function () { setStyle(name); });
+    });
+    const savedScale = parseFloat(recall("scale"));
+    setScale(isNaN(savedScale) ? 1 : savedScale);
+
+    const select = byId("exampleSelect");
+    let html = '<option value="">Choose…</option>';
+    EXAMPLES.forEach(function (ex, i) { html += '<option value="' + i + '">' + escapeHtml(ex.name) + "</option>"; });
+    select.innerHTML = html;
+    select.addEventListener("change", function () {
+      if (select.value !== "") {
+        byId("source").value = formatSource(EXAMPLES[parseInt(select.value, 10)].code);
+        updateGutter();
+        byId("errors").hidden = true;
+      }
+    });
+
+    let startText = recall("source");
+    if (startText) { startText = formatSource(startText); }
+    let result = startText ? assemble(startText) : null;
+    if (!result || result.errors.length > 0) {
+      startText = formatSource(EXAMPLES[0].code);
+      result = assemble(startText);
+    }
+    loadProgram(result, startText);
+
+    byId("btnStep").addEventListener("click", step);
+    byId("btnBack").addEventListener("click", back);
+    byId("btnRun").addEventListener("click", function () { if (running) { stopRun(); } else { startRun(); } });
+    byId("btnReset").addEventListener("click", resetCpu);
+    byId("btnInstant").addEventListener("click", runInstant);
+    byId("memRows").addEventListener("click", function (e) {
+      if (e.target.closest(".mem-edit")) { return; }
+      const row = e.target.closest(".mrow.editable");
+      if (!row) { return; }
+      const add = e.target.closest(".row-add");
+      if (add) {
+        if (insertEnabled) { openLineEditor(row, add.getAttribute("data-mode")); }
+        return;
+      }
+      if (bpEnabled && e.target.closest(".c-addr, .c-gut")) {
+        toggleBreakpoint(parseInt(row.getAttribute("data-addr"), 10));
+        return;
+      }
+      if (editEnabled) { openLineEditor(row, "edit"); }
+    });
+    function showSpeed() {
+      const v = parseInt(byId("speed").value, 10);
+      byId("speedOut").textContent = v === MAX_SPEED ? "Max" : String(v);
+    }
+    byId("speed").addEventListener("input", function () {
+      showSpeed();
+      store("speed", byId("speed").value);
+      if (running && !cpu.waiting) {
+        if (timer) { window.clearTimeout(timer); timer = null; }
+        if (rafId) { window.cancelAnimationFrame(rafId); rafId = null; }
+        tick();
+      }
+    });
+    const savedSpeed = parseInt(recall("speed"), 10);
+    if (savedSpeed >= 1 && savedSpeed <= MAX_SPEED) { byId("speed").value = String(savedSpeed); }
+    showSpeed();
+    byId("btnEdit").addEventListener("click", openEditor);
+    byId("btnCancel").addEventListener("click", closeEditor);
+    byId("btnLoad").addEventListener("click", loadFromEditor);
+    byId("btnFormat").addEventListener("click", formatEditor);
+    byId("btnSave").addEventListener("click", saveProgram);
+    byId("btnNew").addEventListener("click", function () {
+      byId("source").value = "";
+      byId("fileName").value = "lmc-program";
+      byId("exampleSelect").value = "";
+      byId("errors").hidden = true;
+      byId("saveStatus").textContent = "Memory cleared";
+      loadProgram(assemble(""), "");
+      store("source", "");
+      updateGutter();
+      byId("source").focus();
+    });
+    byId("fileName").addEventListener("keydown", function (e) { e.stopPropagation(); });
+    byId("btnTheme").addEventListener("click", function () {
+      setTheme(document.documentElement.getAttribute("data-theme") === "dark" ? "light" : "dark");
+    });
+    byId("btnSmaller").addEventListener("click", function () { setScale(scale - 0.1); });
+    byId("btnBigger").addEventListener("click", function () { setScale(scale + 0.1); });
+    function toggleFullscreen() {
+      if (document.fullscreenElement) {
+        if (document.exitFullscreen) { document.exitFullscreen(); }
+        return;
+      }
+      const el = document.documentElement;
+      if (el.requestFullscreen) {
+        const p = el.requestFullscreen();
+        if (p && p.catch) { p.catch(function () { /* not allowed here */ }); }
+      }
+    }
+    byId("btnFull").addEventListener("click", toggleFullscreen);
+
+    /* Blank screen (presenter remote's blank button sends B or .) */
+    byId("blankOut").addEventListener("click", function () { byId("blankOut").hidden = true; });
+    document.addEventListener("fullscreenchange", function () {
+      byId("btnFull").textContent = document.fullscreenElement ? "Exit full screen" : "Full screen";
+    });
+
+    setStyle(recall("style") || "classic");
+    showCodes = recall("showCodes") === "1";
+    byId("showCodes").checked = showCodes;
+    fitMemory();
+    renderMemory();
+    byId("showCodes").addEventListener("change", function () {
+      showCodes = byId("showCodes").checked;
+      store("showCodes", showCodes ? "1" : "0");
+        fitMemory();
+      renderMemory();
+    });
+
+    const savedMode = recall("trailMode");
+    if (savedMode === "recent" || savedMode === "scroll") { trailMode = savedMode; }
+    const savedKeep = parseInt(recall("keepCount"), 10);
+    if (savedKeep >= 1 && savedKeep <= 12) { keepCount = savedKeep; }
+    byId(trailMode === "recent" ? "trailRecent" : "trailScroll").checked = true;
+    byId("keepCount").value = String(keepCount);
+    byId("keepOut").textContent = String(keepCount);
+    byId("keepRow").classList.toggle("off", trailMode !== "recent");
+    byId("keepCount").disabled = trailMode !== "recent";
+
+    function applyRegLayout() {
+      const cpuEl = byId("cpu");
+      const explain = byId("explain");
+      cpuEl.classList.toggle("simple", !showRegs);
+      byId("reg-cir").hidden = !showRegs;
+      byId("reg-mar").hidden = !showRegs;
+      byId("reg-mdr").hidden = !showRegs;
+      if (showRegs) { cpuEl.appendChild(explain); }
+      else { byId("regs").insertBefore(explain, byId("regCount")); }
+    }
+    formatOnEnter = recall("formatOnEnter") !== "0";
+    byId("formatOnEnter").checked = formatOnEnter;
+    byId("formatOnEnter").addEventListener("change", function () {
+      formatOnEnter = byId("formatOnEnter").checked;
+      store("formatOnEnter", formatOnEnter ? "1" : "0");
+    });
+    animateMoves = recall("animateMoves") === "1";
+    byId("animateMoves").checked = animateMoves;
+    byId("animateMoves").addEventListener("change", function () {
+      animateMoves = byId("animateMoves").checked;
+      store("animateMoves", animateMoves ? "1" : "0");
+    });
+    showRegs = recall("showRegs") === "1";
+    byId("showRegs").checked = showRegs;
+    applyRegLayout();
+    byId("showRegs").addEventListener("change", function () {
+      showRegs = byId("showRegs").checked;
+      store("showRegs", showRegs ? "1" : "0");
+      applyRegLayout();
+      fitMemory();
+      renderTrails(false);
+    });
+
+    editEnabled = recall("editEnabled") === "1";
+    insertEnabled = recall("insertEnabled") === "1";
+    byId("editEnabled").checked = editEnabled;
+    byId("insertEnabled").checked = insertEnabled;
+    function applyEditModes() {
+      byId("memoryPanel").classList.toggle("edit-mode", editEnabled);
+      byId("memoryPanel").classList.toggle("insert-mode", insertEnabled);
+      byId("editHint").hidden = !editEnabled;
+      byId("insertHint").hidden = !insertEnabled;
+    }
+    applyEditModes();
+    byId("editEnabled").addEventListener("change", function () {
+      editEnabled = byId("editEnabled").checked;
+      store("editEnabled", editEnabled ? "1" : "0");
+      applyEditModes();
+    });
+    byId("insertEnabled").addEventListener("change", function () {
+      insertEnabled = byId("insertEnabled").checked;
+      store("insertEnabled", insertEnabled ? "1" : "0");
+      applyEditModes();
+    });
+
+    bpEnabled = recall("bpEnabled") === "1";
+    byId("bpEnabled").checked = bpEnabled;
+    function applyBpMode() {
+      byId("memoryPanel").classList.toggle("bp-mode", bpEnabled);
+      byId("bpHint").hidden = !bpEnabled;
+      renderMemory();
+    }
+    applyBpMode();
+    byId("bpEnabled").addEventListener("change", function () {
+      bpEnabled = byId("bpEnabled").checked;
+      if (!bpEnabled) { breakpoints = {}; }
+      store("bpEnabled", bpEnabled ? "1" : "0");
+      applyBpMode();
+    });
+
+    function trailOptionsChanged() {
+      trailMode = byId("trailRecent").checked ? "recent" : "scroll";
+      keepCount = parseInt(byId("keepCount").value, 10);
+      byId("keepOut").textContent = String(keepCount);
+      byId("keepRow").classList.toggle("off", trailMode !== "recent");
+      byId("keepCount").disabled = trailMode !== "recent";
+      store("trailMode", trailMode);
+      store("keepCount", String(keepCount));
+      renderTrails(false);
+    }
+    byId("trailRecent").addEventListener("change", trailOptionsChanged);
+    byId("trailScroll").addEventListener("change", trailOptionsChanged);
+    byId("keepCount").addEventListener("input", trailOptionsChanged);
+    byId("btnOptions").addEventListener("click", function () {
+      stopRun();
+      byId("optionsBox").hidden = false;
+      byId(trailMode === "recent" ? "trailRecent" : "trailScroll").focus();
+    });
+    byId("btnSym").addEventListener("click", openSymbolTable);
+    byId("btnSymClose").addEventListener("click", function () { byId("symBox").hidden = true; });
+    byId("symBox").addEventListener("click", function (e) {
+      if (e.target === byId("symBox")) { byId("symBox").hidden = true; }
+    });
+    byId("btnRef").addEventListener("click", function () {
+      stopRun();
+      byId("refBox").hidden = false;
+      byId("btnRefClose").focus();
+    });
+    byId("btnRefClose").addEventListener("click", function () { byId("refBox").hidden = true; });
+    byId("refBox").addEventListener("click", function (e) {
+      if (e.target === byId("refBox")) { byId("refBox").hidden = true; }
+    });
+    byId("btnOptionsDone").addEventListener("click", function () { byId("optionsBox").hidden = true; });
+    byId("optionsBox").addEventListener("click", function (e) {
+      if (e.target === byId("optionsBox")) { byId("optionsBox").hidden = true; }
+    });
+
+
+    byId("fileInput").addEventListener("change", function (e) {
+      readFile(e.target.files[0]);
+      e.target.value = "";
+    });
+    const ta = byId("source");
+    const wrap = byId("codeWrap");
+    ta.addEventListener("input", updateGutter);
+    /* Format as you type: on Enter, start the new line and tidy the whole program, keeping the cursor on the new line */
+    ta.addEventListener("keydown", function (e) {
+      if (!formatOnEnter || e.key !== "Enter" || e.shiftKey || e.ctrlKey || e.altKey || e.metaKey || e.isComposing) { return; }
+      e.preventDefault();
+      const before = ta.value.substring(0, ta.selectionStart);
+      const after = ta.value.substring(ta.selectionEnd);
+      const lineIndex = before.split("\n").length;
+      const formatted = formatSource(before + "\n" + after);
+      const lines = formatted.split("\n");
+      while (lines.length <= lineIndex) { lines.push(""); }
+      const text = lines.join("\n");
+      let caret = 0;
+      let i;
+      for (i = 0; i < lineIndex; i++) { caret += lines[i].length + 1; }
+      /* Replace via insertText where supported so Ctrl+Z still works */
+      ta.focus();
+      ta.setSelectionRange(0, ta.value.length);
+      let replaced = false;
+      try { replaced = document.execCommand("insertText", false, text); } catch (err) { replaced = false; }
+      if (!replaced || ta.value !== text) { ta.value = text; }
+      ta.setSelectionRange(caret, caret);
+      const lineHeight = parseFloat(window.getComputedStyle(ta).lineHeight) || 20;
+      const caretTop = lineIndex * lineHeight;
+      if (caretTop < ta.scrollTop) { ta.scrollTop = caretTop; }
+      else if (caretTop + lineHeight * 2 > ta.scrollTop + ta.clientHeight) { ta.scrollTop = caretTop + lineHeight * 2 - ta.clientHeight; }
+      updateGutter();
+    });
+    ta.addEventListener("scroll", function () {
+      byId("gutter").scrollTop = ta.scrollTop;
+      updateCodeHead();
+    });
+    window.addEventListener("resize", updateCodeHead);
+    ta.addEventListener("dragover", function (e) { e.preventDefault(); wrap.classList.add("drop"); });
+    ta.addEventListener("dragleave", function () { wrap.classList.remove("drop"); });
+    ta.addEventListener("drop", function (e) {
+      e.preventDefault();
+      wrap.classList.remove("drop");
+      if (e.dataTransfer && e.dataTransfer.files.length > 0) { readFile(e.dataTransfer.files[0]); }
+    });
+
+    byId("inputForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const raw = byId("inputValue").value.trim();
+      const err = byId("inputError");
+      if (!/^-?\d+$/.test(raw)) {
+        err.textContent = "Type a whole number, for example 7 or −12.";
+        err.hidden = false;
+        return;
+      }
+      const v = parseInt(raw, 10);
+      if (v < -999 || v > 999) {
+        err.textContent = "The LMC holds numbers from −999 to 999.";
+        err.hidden = false;
+        return;
+      }
+      provideInput(v);
+    });
+
+    /* Presenter remotes (e.g. Targus) send PageDown = forward, PageUp = back,
+       F5 / Shift+F5 = slideshow, B or . = blank screen */
+    document.addEventListener("keydown", function (e) {
+      if (!byId("blankOut").hidden) {
+        e.preventDefault();
+        byId("blankOut").hidden = true;
+        return;
+      }
+      if (e.key === "F5") {
+        e.preventDefault();
+        toggleFullscreen();
+        return;
+      }
+      if (!byId("editor").hidden) {
+        if (e.key === "Escape") { closeEditor(); }
+        return;
+      }
+      if (!byId("symBox").hidden) {
+        if (e.key === "Escape" || e.key === "l" || e.key === "L") { byId("symBox").hidden = true; }
+        return;
+      }
+      if (!byId("refBox").hidden) {
+        if (e.key === "Escape" || e.key === "?") { byId("refBox").hidden = true; }
+        return;
+      }
+      if (!byId("optionsBox").hidden) {
+        if (e.key === "Escape") { byId("optionsBox").hidden = true; }
+        return;
+      }
+      if (!byId("inputBox").hidden) { return; }
+      const tag = (e.target.tagName || "").toLowerCase();
+      if (tag === "select" || (tag === "input" && e.target.type !== "radio" && e.target.type !== "range")) { return; }
+      /* Space on a focused button keeps its normal click; the remote's keys always work */
+      if (tag === "button" && e.key === " ") { return; }
+      if ((e.key === "b" || e.key === "B" || e.key === ".") && !e.ctrlKey && !e.metaKey && !e.altKey) {
+        e.preventDefault();
+        stopRun();
+        byId("blankOut").hidden = false;
+        return;
+      }
+      if (e.key === "ArrowRight" || e.key === "PageDown" || e.key === " ") {
+        e.preventDefault();
+        step();
+      } else if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        e.preventDefault();
+        back();
+      } else if (e.key === "l" || e.key === "L") {
+        openSymbolTable();
+      } else if (e.key === "?") {
+        byId("btnRef").click();
+      } else if (e.key === "i" || e.key === "I") {
+        runInstant();
+      } else if (e.key === "r" || e.key === "R") {
+        if (running) { stopRun(); } else { startRun(); }
+      }
+    });
+
+    if (window.ResizeObserver) {
+      new ResizeObserver(function () { fitMemory(); }).observe(byId("memBody"));
+    }
+    window.addEventListener("resize", fitMemory);
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
