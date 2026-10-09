@@ -420,8 +420,14 @@ body { height: 100%; margin: 0; background: var(--bg); color: var(--ink); font-f
 #refBox.docked .dialog { pointer-events: auto; width: min(34rem, 44vw); max-height: calc(100vh - 2rem); }
 #refBox.docked .ref-table { font-size: calc(0.9rem * var(--s)); }
 #refBox.docked .am-grid { grid-template-columns: minmax(0, 1fr); }
-#editor.shift { place-items: center start; }
-#editor.shift .dialog.wide { width: min(52rem, calc(100vw - min(34rem, 44vw) - 3rem)); }
+/* The editor is always left-aligned in the grid; its left margin centres it until the
+   instruction list docks beside it, so width and margin can glide between the two layouts */
+#editor { place-items: center start; }
+#editor .dialog.wide {
+  margin-left: max(0px, calc((100% - min(52rem, 100%)) / 2));
+  transition: width 0.42s cubic-bezier(0.2, 0.7, 0.2, 1), margin-left 0.42s cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+#editor.shift .dialog.wide { width: min(52rem, calc(100vw - min(34rem, 44vw) - 3rem)); margin-left: 0; }
 .dialog h2 { margin: 0; color: var(--navy); font-size: 1.25rem; }
 .dialog p { margin: 0; line-height: 1.45; }
 .dialog-head { display: flex; justify-content: space-between; align-items: center; gap: 0.8rem; flex-wrap: wrap; }
@@ -2338,15 +2344,51 @@ textarea#source:focus-visible { outline: none; }
     updateGutter();
     byId("source").focus();
   }
-  function closeRef() {
+  /* The docked instruction list slides in and out beside the code editor */
+  let dockAnim = null;
+  const DOCK_EASE = "cubic-bezier(0.2, 0.7, 0.2, 1)";
+  function stopDockAnim() {
+    if (dockAnim) { dockAnim.onfinish = null; dockAnim.cancel(); dockAnim = null; }
+  }
+  function slideDockIn() {
+    const dlg = byId("refBox").querySelector(".dialog");
+    stopDockAnim();
+    if (!dlg.animate) { return; }
+    dockAnim = dlg.animate([
+      { transform: "translateX(calc(100% + 2rem))", opacity: 0 },
+      { transform: "none", opacity: 1 }
+    ], { duration: 420, easing: DOCK_EASE });
+    dockAnim.onfinish = function () { dockAnim = null; };
+  }
+  function hideRef() {
     byId("refBox").hidden = true;
     byId("refBox").classList.remove("docked");
+  }
+  function closeRef(instant) {
+    const box = byId("refBox");
+    const dlg = box.querySelector(".dialog");
+    const slide = instant !== true && box.classList.contains("docked") && !box.hidden &&
+      !byId("editor").hidden && dlg.animate;
     byId("editor").classList.remove("shift");
+    stopDockAnim();
+    if (slide) {
+      dockAnim = dlg.animate([
+        { transform: "none", opacity: 1 },
+        { transform: "translateX(calc(100% + 2rem))", opacity: 0 }
+      ], { duration: 340, easing: "cubic-bezier(0.4, 0, 0.8, 0.4)", fill: "forwards" });
+      dockAnim.onfinish = function () {
+        dockAnim.cancel();
+        dockAnim = null;
+        hideRef();
+      };
+    } else {
+      hideRef();
+    }
     if (!byId("editor").hidden) { byId("source").focus(); }
   }
   function closeEditor() {
     byId("editor").hidden = true;
-    if (byId("refBox").classList.contains("docked")) { closeRef(); }
+    if (byId("refBox").classList.contains("docked")) { closeRef(true); }
   }
   /* Tidy source: capitals, labels / mnemonics / operands / comments in aligned columns */
   function formatSource(text) {
@@ -2877,17 +2919,21 @@ textarea#source:focus-visible { outline: none; }
     openRef = function (which, docked) {
       stopRun();
       showRefTab(which);
+      stopDockAnim();
       byId("refBox").classList.toggle("docked", docked === true);
       byId("editor").classList.toggle("shift", docked === true);
       byId("refBox").hidden = false;
+      if (docked === true) { slideDockIn(); }
       if (docked === true) { byId("source").focus(); } else { byId("btnRefClose").focus(); }
     };
     byId("tabIns").addEventListener("click", function () { showRefTab("ins"); });
     byId("tabModes").addEventListener("click", function () { showRefTab("modes"); });
     byId("btnRef").addEventListener("click", function () { openRef("ins"); });
-    byId("btnRefClose").addEventListener("click", closeRef);
+    byId("btnRefClose").addEventListener("click", function () { closeRef(); });
     byId("btnEdRef").addEventListener("click", function () {
-      if (!byId("refBox").hidden) { closeRef(); } else { openRef("ins", true); }
+      /* a second click while the list is sliding out brings it straight back */
+      const leaving = dockAnim !== null && !byId("editor").classList.contains("shift");
+      if (!byId("refBox").hidden && !leaving) { closeRef(); } else { openRef("ins", true); }
     });
     byId("refBox").addEventListener("click", function (e) {
       if (e.target === byId("refBox")) { closeRef(); }
